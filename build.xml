@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+
+<project name="cascading.jruby" default="build" basedir=".">
+	<property file="${basedir}/build.properties"/>
+	<property file="${basedir}/version.properties"/>
+
+	<property environment="env"/>
+
+	<property name="jars.dir" value="${basedir}/jars"/>
+	<property name="cascading.jruby.release.version" value="x.y.z"/>
+
+	<!-- HADOOP -->
+	<property name="hadoop.home" location="${env.HADOOP_HOME}"/>
+  <property name="hadoop.lib" location="${hadoop.home}/lib"/>
+
+	<!-- CASCADING -->
+	<property name="cascading.home" location="${env.CASCADING_HOME}"/>
+	<property file="${cascading.home}/version.properties"/>
+	<property name="cascading.release.version" value="x.y.z"/>
+	<property name="cascading.libs" value="${cascading.home}/lib"/>
+
+	<property name="src.java" location="${basedir}/src/main/java"/>
+	<property name="build.dir" location="${basedir}/build/"/>
+	<property name="build.classes" location="${build.dir}/classes"/>
+
+	<property name="lib-ext.dir" location="${basedir}/lib-ext"/>
+
+	<path id="project.class.path">
+		<pathelement location="${build.classes}"/>
+	
+		<fileset dir="${cascading.home}">
+			<include name="*.jar"/>
+		</fileset>
+
+		<fileset dir="${lib-ext.dir}">
+			<include name="*.jar"/>
+		</fileset>
+		
+		<fileset dir="${cascading.libs}">
+			<include name="*.jar"/>
+		</fileset>
+
+    <fileset dir="${hadoop.lib}">
+      <include name="*.jar"/>
+    </fileset>
+
+    <fileset dir="${hadoop.home}">
+      <include name="*-core.jar"/>
+    </fileset>
+
+    <fileset dir="${hadoop.home}/build" erroronmissingdir="false">
+      <include name="*-core.jar"/>
+    </fileset>
+	</path>
+
+	<target name="init">
+		<mkdir dir="${build.classes}"/>
+		<property name="CLASSPATH" refid="project.class.path"/>
+		<echo message="${CLASSPATH}"/>
+	</target>
+
+	<target name="build" depends="init">
+		<echo message="building cascading.jruby JAR..."/>
+		<javac srcdir="${src.java}" destdir="${build.classes}" verbose="off" debug="${javac.debug}">
+			<classpath refid="project.class.path"/>
+		</javac>
+
+		<jar jarfile="${jars.dir}/${ant.project.name}-${cascading.jruby.release.version}.jar">
+			<fileset dir="${build.classes}"/>
+		</jar>
+	</target>
+	
+	<target name="clean">
+    <echo message="cleaning..."/>
+		<delete file="${jars.dir}/${ant.project.name}-${cascading.jruby.release.version}.jar" />
+	</target> 
+</project>
