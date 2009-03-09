@@ -3,7 +3,7 @@ module Cascading
   
   HBASE_HOME = ENV["HBASE_HOME"]
   CASCADING_HBASE_HOME = ENV["CASCADING_HBASE_HOME"]
- 
+  
   Cascading.require_all_jars(HBASE_HOME)
   Cascading.require_all_jars(CASCADING_HBASE_HOME)
   
