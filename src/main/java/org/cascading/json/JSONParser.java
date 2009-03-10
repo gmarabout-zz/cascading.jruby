@@ -15,7 +15,7 @@ import net.sf.json.JSONObject;
  */
 public class JSONParser extends BaseOperation implements Function {
 
-    protected JSONParser(Fields fieldDeclaration){
+    public JSONParser(Fields fieldDeclaration){
         super( fieldDeclaration );    
     }
 

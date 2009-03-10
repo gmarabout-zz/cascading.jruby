@@ -1,5 +1,3 @@
-#! /usr/bin/jruby 
-
 require 'cascading/base'
 require 'cascading/operations'
 require 'cascading/helpers'
@@ -97,7 +95,7 @@ module Cascading
     
     # Deprecated. Use project instead.
     def keep_only(*fields)
-      keep_only(*fields)
+      project(*fields)
     end
 
     def rename(old_names, new_names)
