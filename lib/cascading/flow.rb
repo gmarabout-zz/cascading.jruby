@@ -23,15 +23,23 @@ module Cascading
     # Create a new sink for this flow, with the specified name.
     # "tap" can be either a tap (see Cascading.tap) or a string that will 
     # reference a path.
-    def sink(name, tap)
-      @sinks[name] = make_tap tap 
+    def sink(*args)
+      if (args.size == 2)
+        @sinks[args[0]] = make_tap args[1]
+      elsif (args.size == 1)
+        @sinks[@name] = make_tap args[0]
+      end 
     end
 
     # Create a new source for this flow, with the specified name.
     # "tap" can be either a tap (see Cascading.tap) or a string that will 
     # reference a path.
-    def source(name, tap)
-      @sources[name] = make_tap tap
+    def source(*args)
+     if (args.size == 2)
+        @sources[args[0]] = make_tap args[1]
+      elsif (args.size == 1)
+        @sources[@name] = make_tap args[0]
+      end
     end
 
     # Builds the flow and returns it as an instance of cascading.flow.Flow

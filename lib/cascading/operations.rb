@@ -35,6 +35,17 @@ module Cascading
       Java::CascadingOperationAggregator::Average.new(*parameters)
     end
 
+    def regex_parser(*args)
+      options = args.extract_options!
+      
+      pattern = args[0].to_s
+      fields = Cascading.fields(options[:fields])
+      groups = options[:groups].to_java(:int) if options[:groups]
+      parameters = [fields, pattern, groups].compact
+
+      Java::CascadingOperationRegex::RegexParser.new(*parameters)
+    end
+
     def regex_splitter(*args)
       options = args.extract_options!
 
@@ -79,8 +90,9 @@ module Cascading
       Java::CascadingOperationExpression::ExpressionFunction.new(*arguments)
     end
 
-    def expression_filter(options)
-      expression = options[:expression].to_s
+    def expression_filter(*args)
+      options = args.extract_options!
+      expression = (args[0] || options[:expression]).to_s
       parameters = options[:parameters]
       parameter_names = []
       parameter_types = []
@@ -110,27 +122,37 @@ module Cascading
         paths << v
       end
       fields = Cascading.fields(fields)
-    
+
       parameters = [fields, paths.to_java(java.lang.String)].compact
       Java::OrgCascadingJson::JSONGenerator.new(*parameters)
     end
-    
+
     def date_formatter(fields, format)
       fields = fields(fields)
       Java::CascadingOperationText::DateFormatter.new(fields, format)      
     end
-    
+
+    def regex_filter(*args)
+      options = args.extract_options!
+
+      pattern = args[0]
+      remove_math = options[:remove_match]
+      match_each_element = options[:match_each_element] 
+      parameters = [pattern.to_s, remove_math, match_each_element].compact
+      Java::CascadingOperationRegex::RegexFilter.new(*parameters)
+    end
+
     def regex_replace(*args)
       options = args.extract_options!
-      
+
       fields = fields(args[0])
       pattern = args[1]
       replacement = args[2]
       replace_all = options[:replace_all]
-      
+
       parameters = [fields, pattern.to_s, replacement.to_s, replace_all].compact
       Java::CascadingOperationRegex::RegexReplace.new(*parameters)
     end
-    
+
   end
 end

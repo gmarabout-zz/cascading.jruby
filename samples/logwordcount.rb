@@ -8,12 +8,8 @@ unless File.exist? input
 end
 
 
-assembly "wordcount" do 
- 
 
-end
-
-flow = flow("logwordcount") do
+flow = Cascading::Builder.flow("logwordcount") do
   
     source "logwordcount", input
   
@@ -22,7 +18,7 @@ flow = flow("logwordcount") do
       
       group_by "word"
 
-      every "word", :aggregator => count_function, :output => %w{ word count }
+      every "word", :aggregator => count_function, :output => %w{ count word }
     
       group_by "count", :reverse => true
     end

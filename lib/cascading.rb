@@ -1,4 +1,6 @@
-#! /usr/bin/jruby
+# encoding: utf-8
+ 
+# cascading.rb : A DSL library for Cascading, in JRuby.
 
 require 'java'
 
@@ -72,4 +74,3 @@ Cascading.require_all_jars(Cascading::CASCADING_HOME)
 
 # include module to make them available at top package
 include Cascading
-include Cascading::Job

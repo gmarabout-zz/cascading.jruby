@@ -10,16 +10,27 @@ module Cascading
     
     def flow(name, &block)
       if block.nil?
-        flow = Cascading::Flow.get(name)
+        flow = Cascading::FlowFactory.get(name)
       else
-        flow = Cascading::Flow.new(name, &block)
+        flow = Cascading::FlowFactory.new(name, &block)
       end
-      flows << flow
+      @flows << flow
     end
     
     
     def make 
-        instance_eval(&@block) if @block
+      super
+      connector = Java::CascadingCascade::CascadeConnector.new
+      flow_instances = @flows.map do |flow|
+        flow.make
+      end
+      cascade = connector.connect(flow_instances.to_java(Java::CascadingFlow::Flow))
     end
+    
+    def complete
+      cascade = make
+      cascade.complete
+    end
+    
   end
 end

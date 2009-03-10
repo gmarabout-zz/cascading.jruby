@@ -29,22 +29,30 @@ module Cascading
 
   # Creates a c.s.TextLine scheme instance from the specified fields.
   def text_line_scheme(*fields)
-    fields = fields(fields) if fields
-    Java::CascadingScheme::TextLine.new(*fields)
+    unless fields.empty?
+      fields = fields(fields) 
+      return Java::CascadingScheme::TextLine.new(fields)
+    else
+      return Java::CascadingScheme::TextLine.new()
+    end
   end
 
   # Creates a c.s.SequenceFile scheme instance from the specified fields.
   def sequence_file_scheme(*fields)
-    fields = fields(fields) if fields
-    Java::CascadingScheme::SequenceFile.new(*fields)
+    unless fields.empty?
+      fields = fields(fields) 
+      return Java::CascadingScheme::SequenceFile.new(fields)
+    else
+      return Java::CascadingScheme::SequenceFile.new()
+    end
   end
 
 
   # Creates a c.t.Hfs tap instance.
   def hfs_tap(*args)
     opts = args.extract_options!
-    path = args.empty? ? opts[:path] : args[0]
-    scheme = opts[:scheme] || text_line_scheme
+    path = args[0] || opts[:path]
+    scheme = opts[:scheme] || text_line_scheme("line")
     replace = opts[:replace]
     parameters = [scheme, path, replace].compact
     Java::CascadingTap::Hfs.new(*parameters)
@@ -54,7 +62,7 @@ module Cascading
   def dfs_tap(*args)
     opts = args.extract_options!
     path = args.empty? ? opts[:path] : args[0]
-    scheme = opts[:scheme] || text_line_scheme
+    scheme = opts[:scheme] || text_line_scheme("line")
     replace = opts[:replace]
     parameters = [scheme, path, replace].compact
     Java::CascadingTap::Dfs.new(*parameters)
@@ -64,7 +72,7 @@ module Cascading
   def lfs_tap(*args)
     opts = args.extract_options!
     path = args.empty? ? opts[:path] : args[0]
-    scheme = opts[:scheme] || text_line_scheme
+    scheme = opts[:scheme] || text_line_scheme("line")
     replace = opts[:replace]
     parameters = [scheme, path, replace].compact
     Java::CascadingTap::Lfs.new(*parameters)

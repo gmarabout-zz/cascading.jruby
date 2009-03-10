@@ -30,13 +30,20 @@ module Cascading
       output = options[:output] || all_fields
       every(fields, :aggregator=>average_function(into), :output => output)
     end
+    
+    def parse(*args)
+        options = args.extract_options!
+        fields = args || all_fields
+        pattern = options[:pattern]
+        output = options[:output] || all_fields
+        each(fields, :filter => regex_parser(pattern, options), :output => output)
+    end
 
     def split(*args)
       options = args.extract_options!
       fields = options[:into] || args[1]
       pattern = options[:pattern] || /[.,]*\s+/
       output = options[:output] || all_fields
-
       each(args[0], :filter => regex_splitter(fields, :pattern => pattern), :output=>output)
     end
 
@@ -61,11 +68,16 @@ module Cascading
       each args[0], :function => regex_replace(into, pattern, replacement), :output => output
     end
 
-    def filter_by_expression(*args)
+    def filter(*args)
       options = args.extract_options!
       from = options[:from] || all_fields
-
-      each from, :filter => expression_filter(:expression => args[0])
+      expression = options[:expression]
+      regex = options[:pattern]
+      if expression
+        each from, :filter => expression_filter(:expression => expression)
+      elsif regex
+        each from, :filter => regex_filter(regex, options)
+      end
     end
 
     def eval_expression(*args)

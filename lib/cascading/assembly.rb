@@ -26,7 +26,7 @@ module Cascading
     def make()
       # puts "Making assembly #{@name}..."
       super
-      pipes = [@head]
+      pipes = [@pipe]
       @children.each do |child|
         pipes += child.make
       end
@@ -89,10 +89,15 @@ module Cascading
     end
 
     # Keeps only the specified fields in the assembly:
-    def keep_only(*fields)
+    def project(*fields)
       operation = Java::CascadingOperation::Identity.new 
       @pipe = Java::CascadingPipe::Each.new(@pipe, Cascading.fields(fields), operation)
       @pipe
+    end
+    
+    # Deprecated. Use project instead.
+    def keep_only(*fields)
+      keep_only(*fields)
     end
 
     def rename(old_names, new_names)
@@ -101,7 +106,10 @@ module Cascading
       @pipe
     end
 
-    def copy(from, into)
+    def copy(*args)
+      options = args.extract_options!
+      from = args[0] || all_fields
+      into = args[1] || options[:into] || all_fields
       operation = Java::CascadingOperation::Identity.new(Cascading.fields(into))
       @pipe = Java::CascadingPipe::Each.new(@pipe, Cascading.fields(from), operation, Java::CascadingTuple::Fields::ALL)
       @pipe
