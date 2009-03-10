@@ -70,8 +70,8 @@ module Cascading
 
     def filter(*args)
       options = args.extract_options!
-      from = options[:from] || all_fields
-      expression = options[:expression]
+      from = options.delete(:from) || all_fields
+      expression = options.delete(:expression)
       regex = options[:pattern]
       if expression
         each from, :filter => expression_filter(:expression => expression)
@@ -83,12 +83,12 @@ module Cascading
     def eval_expression(*args)
       options = args.extract_options!
 
-      into = options[:into]
-      from = options[:from] || all_fields
+      into = options.delete(:into)
+      from = options.delete(:from)|| all_fields
+      output = options.delete(:output) || all_fields
+      options[:expression] = args[0]
 
-      output = options[:output] || all_fields
-
-      each from, :function => expression_function(into, :expression => args[0]), :output=>output
+      each from, :function => expression_function(into, options), :output=>output
     end
     
     def distinct(*fields)
