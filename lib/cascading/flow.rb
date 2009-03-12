@@ -2,22 +2,27 @@ require "cascading/assembly"
 
 module Cascading
 
-  class FlowFactory < Cascading::BaseFactory
 
-    def initialize(*args, &block)
-      super
-      @sources= {}
-      @sinks = {}
-      @assemblies = []
-    end
-
-    def assembly(*args, &block)
-      if block.nil?
-        assembly = Cascading::AssemblyFactory.get(name)
+  class FlowFactory
+    def assembly(node, *args, &block)
+      name = args[0]
+      if block
+        return Cascading::Assembly.new(name, &block)
       else
-        assembly = Cascading::AssemblyFactory.new(name, &block)
+        return Cascading::Assembly.get(name)
       end
-      @assemblies << assembly  
+    end
+  end
+
+
+  class Flow < Cascading::Node
+
+    attr_accessor :sources, :sinks    
+
+    def initialize(name, parent=nil, &block)
+      @sources = {}
+      @sinks = {}
+      super(name, parent, &block)
     end
 
     # Create a new sink for this flow, with the specified name.
@@ -25,9 +30,9 @@ module Cascading
     # reference a path.
     def sink(*args)
       if (args.size == 2)
-        @sinks[args[0]] = make_tap args[1]
+        @sinks[args[0]] = args[1]
       elsif (args.size == 1)
-        @sinks[@name] = make_tap args[0]
+        @sinks[@name] =  args[0]
       end 
     end
 
@@ -35,42 +40,51 @@ module Cascading
     # "tap" can be either a tap (see Cascading.tap) or a string that will 
     # reference a path.
     def source(*args)
-     if (args.size == 2)
-        @sources[args[0]] = make_tap args[1]
+      if (args.size == 2)
+        @sources[args[0]] = args[1]
       elsif (args.size == 1)
-        @sources[@name] = make_tap args[0]
+        @sources[@name] = args[0]
       end
     end
 
-    # Builds the flow and returns it as an instance of cascading.flow.Flow
-    def make
-      super
-      pipes = []
-      @assemblies.map do |assembly|
-        pipes += assembly.make
-        puts pipes
-      end
-      puts "Making flow: #{@name} - Sources: #{@sources} - Sinks: #{@sinks} - Pipes: #{pipes}"
-      Java::CascadingFlow::FlowConnector.new.connect(@name.to_s, @sources, @sinks, pipes.to_java(Java::CascadingPipe::Pipe))
-    end
-
-    # Shortcuts for FlowFactory.make.complete
     def complete
-      execute
-    end
-
-    def execute
-      flow = make
+      parameters = build_connect_parameter()
+      flow = Java::CascadingFlow::FlowConnector.new.connect(*parameters)
       flow.complete
     end
-
-    private 
     
-    def make_tap tap
-      if (tap.is_a? ::String) || (tap.is_a? ::Symbol)
-        tap = Cascading.tap(tap)
-      end
-      tap
+    private
+    
+    def build_connect_parameter
+      sources = make_tap_parameter(@sources)
+      sinks = make_tap_parameter(@sinks)
+      pipes = make_pipes
+      [sources, sinks, pipes]
     end
+    
+    def make_tap_parameter taps
+      if taps.size == 1
+        return taps.values.first
+      else
+        return taps
+      end
+    end
+    
+    def make_pipes
+      if @sinks.size==1
+        return children.last.tail_pipe
+      else
+        pipes = []
+        @sinks.keys.each do |key|
+          assembly = Assembly.get(key)
+          if assembly
+            pipes << assembly.tail_pipe
+          end
+        end
+        return pipes.to_java(Java::CascadingPipe::Pipe)
+      end
+    end
+    
+    
   end
 end

@@ -5,7 +5,7 @@ input = 'output/fetched/fetch.txt'
 output = 'output/splitted'
 
 
-assembly "copy" do  
+Assembly.new "copy" do  
   each "line", :function => identity
   
 end

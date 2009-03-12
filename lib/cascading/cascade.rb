@@ -1,23 +1,19 @@
 require "cascading/base"
 
 module Cascading
-  class CascadeFactory < Cascading::BaseFactory
-    
-    def initialize(*args, &block)
-      super
-      @flows = []
-    end
-    
-    def flow(name, &block)
+  class CascadeFactory 
+
+    def flow(node, *args, &block)
       if block.nil?
-        flow = Cascading::FlowFactory.get(name)
+        return Cascading::Flow.get(name)
       else
-        flow = Cascading::FlowFactory.new(name, &block)
+        return Cascading::Flow.new(name)
       end
-      @flows << flow
     end
-    
-    
+
+  end
+
+  class Cascade
     def make 
       super
       connector = Java::CascadingCascade::CascadeConnector.new
@@ -26,11 +22,10 @@ module Cascading
       end
       cascade = connector.connect(flow_instances.to_java(Java::CascadingFlow::Flow))
     end
-    
+
     def complete
       cascade = make
       cascade.complete
     end
-    
   end
 end

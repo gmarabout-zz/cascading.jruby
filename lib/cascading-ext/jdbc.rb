@@ -13,7 +13,6 @@ module Cascading
     opts = args.extract_options!
 
     connection_url =  args[0]
-
     driver_class_name = opts[:driver_class_name]
     column_names = opts[:column_names]
     table_name = opts[:table_name]

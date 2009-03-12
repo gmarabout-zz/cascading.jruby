@@ -9,30 +9,36 @@ class TC_Assembly < Test::Unit::TestCase
   include Cascading::Operations
 
   def test_create_assembly_simple
-    assemblyFactory = Cascading::AssemblyFactory.new("assembly1") do
+    assembly = Cascading::Assembly.new("assembly1") do
     end
 
-    assert_not_nil Cascading::AssemblyFactory.get("assembly1")
-    assert_equal assemblyFactory, Cascading::AssemblyFactory.get("assembly1")
-    pipe = assemblyFactory.make[0]
+    assert_not_nil Cascading::Assembly.get("assembly1")
+    assert_equal assembly, Cascading::Assembly.get("assembly1")
+    pipe = assembly.tail_pipe
     assert pipe.is_a? Java::CascadingPipe::Pipe
   end
 
   def test_each_identity
-    assemblyFactory = Cascading::AssemblyFactory.new("assembly1") do
+    assembly = Cascading::Assembly.new("assembly1") do
       each "field1", :filter => identity
     end
 
-    assert_not_nil Cascading::AssemblyFactory.get("assembly1")
-    assert_equal assemblyFactory, Cascading::AssemblyFactory.get("assembly1")
+    assert_not_nil Cascading::Assembly.get("assembly1")
+    assert_equal assembly, Cascading::Assembly.get("assembly1")
   end
 
 
   def test_create_each  
-    pipe = Cascading::AssemblyFactory.new("test").each(:filter => identity)
-    assert pipe.is_a? Java::CascadingPipe::Each
+    assembly = Cascading::Assembly.new("test") do
+      each(:filter => identity)
+    end
+    assert assembly.tail_pipe.is_a? Java::CascadingPipe::Each
 
-    pipe = Cascading::AssemblyFactory.new("test").each("Field1", :output => "Field2", :filter => identity)
+    assembly = Cascading::Assembly.new("test") do 
+      each("Field1", :output => "Field2", :filter => identity)
+    end
+    pipe = assembly.tail_pipe
+    
 
     assert pipe.is_a? Java::CascadingPipe::Each
 
@@ -42,116 +48,144 @@ class TC_Assembly < Test::Unit::TestCase
 
   def test_create_every
 
-    pipe = Cascading::AssemblyFactory.new("test").every(:aggregator => count_function)
+    assembly = Cascading::Assembly.new("test") do
+      every(:aggregator => count_function)
+    end
+    pipe = assembly.tail_pipe
     assert pipe.is_a? Java::CascadingPipe::Every
 
-    pipe = Cascading::AssemblyFactory.new("test").every(:aggregator => count_function("field1", "field2"))
-    assert pipe.is_a? Java::CascadingPipe::Every
+    assembly = Cascading::Assembly.new("test") do 
+      every(:aggregator => count_function("field1", "field2"))
+    end
+    assert assembly.tail_pipe.is_a? Java::CascadingPipe::Every
 
-    pipe = Cascading::AssemblyFactory.new("test").every("Field1", :aggregator => count_function)
-    assert pipe.is_a? Java::CascadingPipe::Every
-    assert_equal "Field1", pipe.getArgumentSelector().get(0)
+    assembly = Cascading::Assembly.new("test") do
+      every("Field1", :aggregator => count_function)
+    end
+    assert assembly.tail_pipe.is_a? Java::CascadingPipe::Every
+    assert_equal "Field1", assembly.tail_pipe.getArgumentSelector().get(0)
 
-    pipe = Cascading::AssemblyFactory.new("test").every("Field1", :aggregator => count_function, :output=>"Field2")
-    assert pipe.is_a? Java::CascadingPipe::Every
-    assert_equal "Field1", pipe.getArgumentSelector().get(0)
-    assert_equal "Field2", pipe.getOutputSelector().get(0)
+    assembly = Cascading::Assembly.new("test") do
+      every("Field1", :aggregator => count_function, :output=>"Field2")
+    end
+    assert assembly.tail_pipe.is_a? Java::CascadingPipe::Every
+    assert_equal "Field1", assembly.tail_pipe.getArgumentSelector().get(0)
+    assert_equal "Field2", assembly.tail_pipe.getOutputSelector().get(0)
   end
 
   def test_create_group_by
-    pipe = Cascading::AssemblyFactory.new("test").group_by("field1")
+    assembly = Cascading::Assembly.new("test") do
+      group_by("field1")
+    end
 
-    assert pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = pipe.getGroupingSelectors()["test"]
+    assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
     assert_equal "field1", grouping_fields.get(0) 
 
-    pipe = Cascading::AssemblyFactory.new("test").group_by("field1")
+    assembly = Cascading::Assembly.new("test") do
+      group_by("field1")
+    end
 
-    assert pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = pipe.getGroupingSelectors()["test"]
+    assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
     assert_equal "field1", grouping_fields.get(0)
   end
 
   def test_create_group_by_many_fields
-    pipe = Cascading::AssemblyFactory.new("test").group_by(["field1", "field2"])
+    assembly = Cascading::Assembly.new("test") do
+      group_by(["field1", "field2"])
+    end
 
-    assert pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = pipe.getGroupingSelectors()["test"]
+    assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
     assert_equal "field1", grouping_fields.get(0)
     assert_equal "field2", grouping_fields.get(1)
   end
 
   def test_create_group_by_with_sort
-    pipe = Cascading::AssemblyFactory.new("test").group_by("field1", "field2", :sort_by => ["field2"])
+    assembly = Cascading::Assembly.new("test") do
+      group_by("field1", "field2", :sort_by => ["field2"])
+    end
 
-    assert pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = pipe.getGroupingSelectors()["test"]
-    sorting_fields = pipe.getSortingSelectors()["test"]
+    assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
+    sorting_fields = assembly.tail_pipe.getSortingSelectors()["test"]
 
     assert_equal 2, grouping_fields.size
     assert_equal 1, sorting_fields.size
 
     assert_equal "field1", grouping_fields.get(0)
     assert_equal "field2", grouping_fields.get(1)
-    assert pipe.isSorted()
-    assert !pipe.isSortReversed()
+    assert assembly.tail_pipe.isSorted()
+    assert !assembly.tail_pipe.isSortReversed()
     assert_equal "field2", sorting_fields.get(0)
   end
 
   def test_create_group_by_with_sort_reverse
-    pipe = Cascading::AssemblyFactory.new("test").group_by("field1", "field2", :sort_by => ["field2"], :reverse => true)
+    assembly = Cascading::Assembly.new("test") do
+      group_by("field1", "field2", :sort_by => ["field2"], :reverse => true)
+    end
 
-    assert pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = pipe.getGroupingSelectors()["test"]
-    sorting_fields = pipe.getSortingSelectors()["test"]
+    assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
+    sorting_fields = assembly.tail_pipe.getSortingSelectors()["test"]
 
     assert_equal 2, grouping_fields.size
     assert_equal 1, sorting_fields.size
 
     assert_equal "field1", grouping_fields.get(0)
     assert_equal "field2", grouping_fields.get(1)
-    assert pipe.isSorted()
-    assert pipe.isSortReversed()
+    assert assembly.tail_pipe.isSorted()
+    assert assembly.tail_pipe.isSortReversed()
     assert_equal "field2", sorting_fields.get(0)
   end
 
   def test_create_group_by_reverse
-    pipe = Cascading::AssemblyFactory.new("test").group_by("field1", "field2", :reverse => true)
+    assembly = Cascading::Assembly.new("test") do 
+      group_by("field1", "field2", :reverse => true)
+    end
 
-    assert pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = pipe.getGroupingSelectors()["test"]
-    sorting_fields = pipe.getSortingSelectors()["test"]
+    assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
+    sorting_fields = assembly.tail_pipe.getSortingSelectors()["test"]
 
     assert_equal 2, grouping_fields.size
     assert_equal 2, sorting_fields.size
 
     assert_equal "field1", grouping_fields.get(0)
     assert_equal "field2", grouping_fields.get(1)
-    assert pipe.isSorted()
-    assert pipe.isSortReversed()
+    assert assembly.tail_pipe.isSorted()
+    assert assembly.tail_pipe.isSortReversed()
     assert_equal "field1", sorting_fields.get(0)
     assert_equal "field2", sorting_fields.get(1)
   end
   
+  def test_branch_unique
+    assembly = Assembly.new("test") do
+      branch "branch1"
+    end
+    
+    assert_equal 1, assembly.children.size
+  
+  end
   
   def test_branch_empty
-    assembly = Cascading::AssemblyFactory.new("test") do
+    assembly = Cascading::Assembly.new("test") do
       branch "branch1" do
       end
       
       branch "branch2" do
-        branch "branch3" do
-        end
+        branch "branch3" 
       end
     end
+  
+    assert_equal 2, assembly.children.size
+    assert_equal 1, assembly.children[1].children.size
     
-    pipes = assembly.make
-    
-    assert_equal 4, pipes.size
   end
   
   def test_branch_single
-    assembly = Cascading::AssemblyFactory.new("test") do      
+    assembly = Cascading::Assembly.new("test") do      
       branch "branch1" do
         branch "branch2" do
           each "line", :function => identity
@@ -159,9 +193,22 @@ class TC_Assembly < Test::Unit::TestCase
       end
     end
     
-    pipes = assembly.make
+    assert_equal 1, assembly.children.size
+    assert_equal 1, assembly.children[0].children.size
     
-    assert_equal 3, pipes.size
+  end
+  
+  def test_full_assembly
+    assembly = Cascading::Assembly.new "test" do
+      each("Field1", :output => "Field1", :filter => identity)
+      every(:aggregator => count_function)
+    end
+    
+    
+    pipe = assembly.tail_pipe
+    
+    assert pipe.is_a? Java::CascadingPipe::Every
+ 
   end
   
 end

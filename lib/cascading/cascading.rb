@@ -26,7 +26,6 @@ module Cascading
     Java::CascadingTuple::Fields::RESULTS 
   end
 
-
   # Creates a c.s.TextLine scheme instance from the specified fields.
   def text_line_scheme(*fields)
     unless fields.empty?

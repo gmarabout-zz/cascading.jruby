@@ -7,7 +7,7 @@ sink1 = tap('output/sorted', :scheme => text_line_scheme, :replace=>true)
 
 expr = "val2 < 40 ? val1 : val2"
 
-flow1 = Cascading::Builder.flow("fetch") do
+flow1 = Cascading::Flow.new("fetch") do
   source "fetch", source1
 
   sink "fetch", sink1

@@ -89,6 +89,14 @@ module Cascading
 
       Java::CascadingOperationExpression::ExpressionFunction.new(*arguments)
     end
+    
+    def insert_function(*args)
+      options=args.extract_options!
+      fields = Cascading.fields(args)
+      values = options[:values] 
+      parameters = [fields, values.to_java(java.lang.Comparable)].compact
+      Java::CascadingOperation::Insert.new(*parameters)
+    end
 
     def expression_filter(*args)
       options = args.extract_options!

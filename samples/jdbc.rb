@@ -14,17 +14,14 @@ connection_props = {
   :primary_key => "id"
 }
 
-
-
-flow = Cascading::Builder.flow("copy_to_mysql") do
-  source tap(input)
-  sink jdbc_tap('jdbc:mysql://localhost/test?user=root&password=', connection_props)
+flow = Cascading::Flow.new("copy_to_mysql") do
+  source "extract", tap(input)
+  sink "extract", jdbc_tap('jdbc:mysql://localhost/test?user=root&password=', connection_props)
   #sink tap("output/fake-jdbc", :replace => true)
 
   assembly "extract" do
     split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"]
 
-    project "id", "name", "score1", "score2"
 
   end
 end 

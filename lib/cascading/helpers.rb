@@ -68,11 +68,22 @@ module Cascading
       each args[0], :function => regex_replace(into, pattern, replacement), :output => output
     end
 
+    def insert(*args)
+      options = args.extract_options!
+      keys = []
+      values = []
+      options.each do |k, v|
+        keys << k
+        values << v
+      end
+      each all_fields, :function => insert_function(keys, :values => values), :output => all_fields
+    end
+
     def filter(*args)
       options = args.extract_options!
       from = options.delete(:from) || all_fields
-      expression = options.delete(:expression)
-      regex = options[:pattern]
+      expression = options.delete(:expression) || args[0]
+      regex = options.delete(:pattern)
       if expression
         each from, :filter => expression_filter(:expression => expression)
       elsif regex
@@ -96,6 +107,13 @@ module Cascading
       every all_fields, :aggregator=>Java::CascadingOperationAggregator::First.new, :output=>results_fields
     end
       
+      
+    def merge(*args)
+      options = args.extract_options!
+      pipes = args
+      
+      merge_pipes pipes
+    end
   end # module PipeHelpers
   
 end # module Cascading

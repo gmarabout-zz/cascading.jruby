@@ -1,57 +1,42 @@
 require 'cascading/base'
 require 'cascading/operations'
 require 'cascading/helpers'
+require 'cascading/ext/array'
 
 module Cascading
 
-  class AssemblyFactory < Cascading::BaseFactory
-
-    include Cascading::Operations     
-    include Cascading::PipeHelpers
-
-    attr_accessor :parent, :children, :head
-
-    def initialize(*args, &block)
-      super 
-      options = args.extract_options
-      @parent = options[:parent]
-      @children = []
-      parameters = [@name.to_s, @parent].compact
-      @pipe = @head = Java::CascadingPipe::Pipe.new(*parameters)
+  class AssemblyFactory 
+     
+        
+    def branch(node, *args, &block)
+      name = args[0]
+      new_node = Cascading::Assembly.new(name, node, &block)
+      new_node
     end
 
-    # Make this assembly. Returns an array of pipes (instances of cascading.pipe.Pipe)
-    def make()
-      # puts "Making assembly #{@name}..."
-      super
-      pipes = [@pipe]
-      @children.each do |child|
-        pipes += child.make
-      end
-      pipes
-    end
-
-    def branch(name, &block)
-      # puts "Making branch #{@name}..."
-      assembly = AssemblyFactory.new(name, pipe, &block)
-      assembly.parent = pipe
-      @children << assembly
-    end
-
-    def group_by(*args)
+    def group_by(node, *args)
       # puts "Create group by pipe"
       options = args.extract_options!
-
+      
       group_fields = Cascading.fields(args) 
+      
       sort_fields = Cascading.fields(options[:sort_by] || args)
       reverse = options[:reverse]
 
-      parameters = [@pipe, group_fields, sort_fields, reverse].compact
-      @pipe = Java::CascadingPipe::GroupBy.new(*parameters)
-      @pipe
+      parameters = [group_fields, sort_fields, reverse].compact
+      node.new_pipe(Java::CascadingPipe::GroupBy, *parameters)
+    end
+    
+    def merge_pipes(node, *args)
+      pipes = []
+      args[0].each do |assembly|
+        pipes << assembly.tail_pipe
+      end
+      #node.new_pipe(Java::CascadingPipe::GroupBy, pipes.to_java(Java::CascadingPipe::Pipe))
+      node.tail_pipe = Java::CascadingPipe::GroupBy.new(pipes.to_java(Java::CascadingPipe::Pipe))
     end
 
-    def every(*args)     
+    def every(node, *args)     
       # puts "Create every pipe" 
       options = args.extract_options!
 
@@ -59,12 +44,11 @@ module Cascading
       out_fields = Cascading.fields(options[:output])
       operation = options[:aggregator] || options[:buffer] 
 
-      parameters = [@pipe, in_fields, operation, out_fields].compact
-      @pipe = Java::CascadingPipe::Every.new(*parameters)   
-      @pipe
+      parameters = [in_fields, operation, out_fields].compact
+      node.new_pipe(Java::CascadingPipe::Every, *parameters)   
     end
 
-    def each(*args)
+    def each(node, *args)
       # puts "Create each pipe"
       options = args.extract_options!
 
@@ -72,36 +56,30 @@ module Cascading
       out_fields = Cascading.fields(options[:output]) 
       operation = options[:filter] || options[:function] 
 
-      parameters = [@pipe, in_fields, operation, out_fields].compact
-      @pipe = Java::CascadingPipe::Each.new(*parameters)
-      @pipe
+      parameters = [in_fields, operation, out_fields].compact
+      node.new_pipe(Java::CascadingPipe::Each, *parameters)
     end   
 
-    def co_group(*args)
+    def co_group(node, *args)
       raise "not implemented yet"
     end
 
-    def branch(name, &block)
-      branch = Cascading::AssemblyFactory.new(name, :parent => @pipe, &block)
-      children << branch
-    end
-
     # Keeps only the specified fields in the assembly:
-    def project(*fields)
-      operation = Java::CascadingOperation::Identity.new 
-      @pipe = Java::CascadingPipe::Each.new(@pipe, Cascading.fields(fields), operation)
-      @pipe
+    def project(node, *args)
+      operation = Java::CascadingOperation::Identity.new(Cascading.fields(args[1])) 
+      node.new_pipe(Java::CascadingPipe::Each, Cascading.fields(args[0]), operation, Cascading.all_fields)
     end
     
     # Deprecated. Use project instead.
-    def keep_only(*fields)
-      project(*fields)
+    def keep_only(node, *fields)
+      project(node, *fields)
     end
 
-    def rename(old_names, new_names)
-      operation =  Java::CascadingOperation::Identity.new(Cascading.fields(new_names))
-      @pipe = Java::CascadingPipe::Each.new(@pipe, Cascading.fields(old_names), operation, Cascading.fields(new_names))
-      @pipe
+    def rename(node, *args)
+      old_names = args[0]
+      new_names = args[1]
+      operation = Java::CascadingOperation::Identity.new(Cascading.fields(new_names))
+      node.new_pipe(Java::CascadingPipe::Each, Cascading.fields(old_names), operation, Cascading.fields(new_names))
     end
 
     def copy(*args)
@@ -109,16 +87,44 @@ module Cascading
       from = args[0] || all_fields
       into = args[1] || options[:into] || all_fields
       operation = Java::CascadingOperation::Identity.new(Cascading.fields(into))
-      @pipe = Java::CascadingPipe::Each.new(@pipe, Cascading.fields(from), operation, Java::CascadingTuple::Fields::ALL)
-      @pipe
+      node.new_pipe(Java::CascadingPipe::Each, Cascading.fields(from), operation, Java::CascadingTuple::Fields::ALL)
     end
 
     # A pipe that does nothing.
-    def pass
+    def pass(node, *args)
       operation = Java::CascadingOperation::Identity.new 
-      @pipe = Java::CascadingPipe::Each.new(@pipe, all_fields, operation)
-      @pipe
+      node.new_pipe(Java::CascadingPipe::Each, all_fields, operation)
     end
 
   end # class Assembly
+  
+  
+  class Assembly < Cascading::Node
+    
+    include Cascading::Operations    
+    include Cascading::PipeHelpers
+    
+    attr_accessor :tail_pipe, :head_pipe    
+        
+    def initialize(name, parent=nil, &block)
+      if (parent)
+        @head_pipe = Java::CascadingPipe::Pipe.new(name, parent.tail_pipe)
+      else
+        @head_pipe = Java::CascadingPipe::Pipe.new(name)
+      end
+      @tail_pipe = @head_pipe
+      super
+    end
+    
+    def new_pipe(type, *parameters)
+      #puts "Creating new pipe : #{type} with parameters: #{parameters}"
+      @tail_pipe = type.new(@tail_pipe , *parameters)
+    end
+        
+    def to_s
+      "#{@name} : head pipe : #{@head_pipe} - tail pipe: #{@tail_pipe}"
+    end
+    
+  end
+  
 end

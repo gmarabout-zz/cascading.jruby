@@ -9,9 +9,9 @@ end
 
 
 
-flow = Cascading::Builder.flow("logwordcount") do
+flow = Cascading::Flow.new("logwordcount") do
   
-    source "logwordcount", input
+    source "logwordcount", tap(input)
   
     assembly ("logwordcount") do
       each "line", :output =>"word", :filter => regex_split_generator("word", :pattern => /[.,]*\s+/)
@@ -28,4 +28,4 @@ flow = Cascading::Builder.flow("logwordcount") do
 end
 
 
-flow.execute
+flow.complete
