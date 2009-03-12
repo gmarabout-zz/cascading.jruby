@@ -28,10 +28,11 @@ module Cascading
     end
     
     def union_pipes(node, *args)
-      pipes = []
-      args[0].each do |assembly|
-        pipes << assembly.tail_pipe
+      pipes = args[0].map do |pipe|
+        #puts pipe.class
+        pipe.tail_pipe
       end
+      
       node.tail_pipe = Java::CascadingPipe::GroupBy.new(pipes.to_java(Java::CascadingPipe::Pipe))
     end
 
@@ -76,7 +77,7 @@ module Cascading
       node.new_pipe(Java::CascadingPipe::Each, Cascading.fields(old_names), operation, Cascading.fields(new_names))
     end
 
-    def copy(*args)
+    def copy(node, *args)
       options = args.extract_options!
       from = args[0] || all_fields
       into = args[1] || options[:into] || all_fields
