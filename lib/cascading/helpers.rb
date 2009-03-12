@@ -108,11 +108,11 @@ module Cascading
     end
       
       
-    def merge(*args)
+    def union(*args)
       options = args.extract_options!
       pipes = args
       
-      merge_pipes pipes
+      union_pipes pipes
     end
   end # module PipeHelpers
   

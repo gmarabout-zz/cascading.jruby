@@ -17,7 +17,7 @@ flow = Cascading::Flow.new("copy") do
 
       count
 
-      project "score1", "count"
+      resctrict_to "score1", "count"
   end
 end
 

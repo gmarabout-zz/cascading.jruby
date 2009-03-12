@@ -6,16 +6,12 @@ unless File.exist? input
   system "curl --create-dirs -o #{input} #{dataUrl}"
 end
 
-output = "output/merged"
-output1 = "output/merged1"
-output2 = "output/merged2"
+output = "output/union"
 
 flow = Cascading::Flow.new("copy_to_mysql") do
-  source  "extract", tap(input)
-  sink tap(output)
-  #sink  "branch1", tap(output1, :replace=>true)
-  #sink  "branch2", tap(output2, :replace=>true)
-  
+  source "extract", tap(input)
+  sink tap(output, :replace=>true)
+    
   assembly "extract" do
     
     split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
@@ -33,7 +29,7 @@ flow = Cascading::Flow.new("copy_to_mysql") do
     end
     
     
-    merge b1, b2
+    union b1, b2
     
   end
 end 
