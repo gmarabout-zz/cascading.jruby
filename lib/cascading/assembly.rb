@@ -7,7 +7,6 @@ module Cascading
 
   class AssemblyFactory 
      
-        
     def branch(node, *args, &block)
       name = args[0]
       new_node = Cascading::Assembly.new(name, node, &block)

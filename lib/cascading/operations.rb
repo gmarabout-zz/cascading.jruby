@@ -135,6 +135,11 @@ module Cascading
       Java::OrgCascadingJson::JSONGenerator.new(*parameters)
     end
 
+    def date_parser(field, format)
+      fields = fields(field)
+      Java::CascadingOperationText::DateParser.new(fields, format)
+    end
+
     def date_formatter(fields, format)
       fields = fields(fields)
       Java::CascadingOperationText::DateFormatter.new(fields, format)      
