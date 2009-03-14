@@ -3,6 +3,32 @@
 require 'test/unit'
 require 'cascading/assembly'
 
+def compare_files(file1, file2)
+  input1 = []
+  input2 = []
+  
+  open(file1).each do |line|
+   input1 << line
+  end
+  
+  open(file2).each do |line|
+    input2 << line
+  end 
+  
+  return "Sizes of files a different (#{input1.size} != #{input1.size})" if input1.size != input1.size
+  
+  for i in [0..input1.size]
+    line1 = input1[i]
+    line2 = input2[i]
+    return "Line is different : #{line1} != #{line2}" if line1 != line2
+  end
+end
+
+
+def compare_with_references(test_name)
+  result = compare_files("test/references/#{test_name}.txt", "output/#{test_name}/part-00000")
+  assert_nil(result)
+end
 
 class TC_Assembly < Test::Unit::TestCase
 
@@ -211,4 +237,29 @@ class TC_Assembly < Test::Unit::TestCase
  
   end
   
+end
+
+
+class TC_AssemblyScenarii < Test::Unit::TestCase
+
+  def test_splitter
+    flow = Cascading::Flow.new("splitter") do
+      
+      source "copy", tap("test/data/data1.txt")
+      sink "copy", tap('output/splitter', :replace=>true)
+
+      assembly "copy" do
+
+          # Split "line" using a JSONSplitter
+          split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
+
+          assert_size_equals 4
+          
+          assert_not_null
+          
+          debug :print_fields=>true
+      end
+    end
+    flow.complete
+  end
 end

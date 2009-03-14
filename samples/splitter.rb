@@ -17,7 +17,7 @@ flow = Cascading::Flow.new("copy") do
 
       count
 
-      resctrict_to "score1", "count"
+      restrict_to "score1", "count"
   end
 end
 

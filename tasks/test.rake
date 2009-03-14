@@ -2,6 +2,8 @@
 if test(?e, PROJ.test.file) or not PROJ.test.files.to_a.empty?
 require 'rake/testtask'
 
+
+
 namespace :test do
 
   Rake::TestTask.new(:run) do |t|

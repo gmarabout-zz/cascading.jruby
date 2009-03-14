@@ -90,7 +90,6 @@ module Cascading
       node.new_pipe(Java::CascadingPipe::Each, all_fields, operation)
     end
     
-    
     def assert(node, *args)
       options = args.extract_options!
       

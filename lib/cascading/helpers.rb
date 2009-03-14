@@ -20,6 +20,22 @@ module Cascading
       parameters = [print_fields].compact
       each(all_fields, :filter => Java::CascadingOperation::Debug.new(*parameters))
     end
+    
+    # Builds a pipe that assert the size of the tuple is the size specified in parameter.
+    #
+    # The method accept an unique uname argument : a number indicating the size expected.
+    def assert_size_equals(*args)
+      options = args.extract_options!
+      assertion = Java::CascadingOperationAssertion::AssertSizeEquals.new(args[0])      
+      assert(assertion, options)
+    end
+
+    # Builds a pipe that assert the none of the fields in the tuple are null.
+    def assert_not_null(*args)
+      options = args.extract_options!
+      assertion = Java::CascadingOperationAssertion::AssertNotNull.new()      
+      assert(assertion, options)
+    end
 
     # Builds a pipe that computes a count.
     #

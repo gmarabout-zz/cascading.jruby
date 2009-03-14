@@ -19,6 +19,7 @@ ensure_in_path 'lib'
 
 require 'cascading'
 
+
 task :default => 'test:run'
 
 task :run_samples do
