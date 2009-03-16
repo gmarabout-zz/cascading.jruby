@@ -1,3 +1,9 @@
+# flow.rb
+#
+# Copyright 2009, Grégoire Marabout. All Rights Reserved.
+#
+# This is free software. Please see the LICENSE and COPYING files for details.
+
 require "cascading/assembly"
 
 module Cascading

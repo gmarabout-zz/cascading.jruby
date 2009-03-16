@@ -1,6 +1,10 @@
 # encoding: utf-8
  
 # cascading.rb : A DSL library for Cascading, in JRuby.
+#
+# Copyright 2009, Grégoire Marabout. All Rights Reserved.
+#
+# This is free software. Please see the LICENSE and COPYING files for details.
 
 require 'java'
 
