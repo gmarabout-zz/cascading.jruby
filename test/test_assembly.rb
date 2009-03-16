@@ -42,7 +42,7 @@ class TC_Assembly < Test::Unit::TestCase
       each("Field1", :output => "Field2", :filter => identity)
     end
     pipe = assembly.tail_pipe
-    
+
 
     assert pipe.is_a? Java::CascadingPipe::Each
 
@@ -163,31 +163,31 @@ class TC_Assembly < Test::Unit::TestCase
     assert_equal "field1", sorting_fields.get(0)
     assert_equal "field2", sorting_fields.get(1)
   end
-  
+
   def test_branch_unique
     assembly = Assembly.new("test") do
       branch "branch1"
     end
-    
+
     assert_equal 1, assembly.children.size
-  
+
   end
-  
+
   def test_branch_empty
     assembly = Cascading::Assembly.new("test") do
       branch "branch1" do
       end
-      
+
       branch "branch2" do
         branch "branch3" 
       end
     end
-  
+
     assert_equal 2, assembly.children.size
     assert_equal 1, assembly.children[1].children.size
-    
+
   end
-  
+
   def test_branch_single
     assembly = Cascading::Assembly.new("test") do      
       branch "branch1" do
@@ -196,25 +196,25 @@ class TC_Assembly < Test::Unit::TestCase
         end
       end
     end
-    
+
     assert_equal 1, assembly.children.size
     assert_equal 1, assembly.children[0].children.size
-    
+
   end
-  
+
   def test_full_assembly
     assembly = Cascading::Assembly.new "test" do
       each("Field1", :output => "Field1", :filter => identity)
       every(:aggregator => count_function)
     end
-    
-    
+
+
     pipe = assembly.tail_pipe
-    
+
     assert pipe.is_a? Java::CascadingPipe::Every
- 
+
   end
-  
+
 end
 
 
@@ -222,22 +222,98 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
   def test_splitter
     flow = Cascading::Flow.new("splitter") do
-      
+
       source "copy", tap("test/data/data1.txt")
       sink "copy", tap('output/splitter', :replace=>true)
 
       assembly "copy" do
 
-          # Split "line" using a JSONSplitter
-          split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
+        # Split "line" using a JSONSplitter
+        split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
 
-          assert_size_equals 4
-          
-          assert_not_null
-          
-          debug :print_fields=>true
+        assert_size_equals 4
+
+        assert_not_null
+
+        debug :print_fields=>true
       end
     end
     flow.complete
   end
+
+
+  def test_join1
+    flow = Cascading::Flow.new("splitter") do
+
+      source "data1", tap("test/data/data1.txt")
+      source "data2", tap("test/data/data2.txt")
+      sink "joined", tap('output/joined', :replace=>true)
+
+      assembly1 = assembly "data1" do
+
+        # Split "line" using a JSONSplitter
+        split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
+        
+        assert_size_equals 4
+
+        assert_not_null
+        debug :print_fields=>true
+
+      end
+
+      assembly2 = assembly "data2" do
+
+        # Split "line" using a JSONSplitter
+        split "line", :pattern => /[.,]*\s+/, :into=>["name",  "id", "town"], :output => ["name",  "id", "town"]
+
+        assert_size_equals 3
+
+        assert_not_null
+        debug :print_fields=>true
+      end
+
+      assembly "joined" do
+        join assembly1, assembly2, :group_fields => ["name", "id"], :declared_fields => ["name", "score1", "score2", "id", "name2", "id2", "town"]
+      
+        assert_size_equals 7
+
+        assert_not_null
+        
+      end
+    end
+    flow.complete
+  end
+  
+  def test_join2
+     flow = Cascading::Flow.new("splitter") do
+
+       source "data1", tap("test/data/data1.txt")
+       source "data2", tap("test/data/data2.txt")
+       sink "joined", tap('output/joined', :replace=>true)
+
+       assembly1 = assembly "data1" do
+
+         # Split "line" using a JSONSplitter
+         split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
+
+         debug :print_fields=>true
+
+       end
+
+       assembly2 = assembly "data2" do
+
+         # Split "line" using a JSONSplitter
+         split "line", :pattern => /[.,]*\s+/, :into=>["name",  "code", "town"], :output => ["name",  "code", "town"]
+
+         debug :print_fields=>true
+       end
+
+       assembly "joined" do
+         join :group_fields => {assembly1=>["name", "id"], assembly2=>["name", "code"]}, :declared_fields => ["name", "score1", "score2", "id", "name2", "code", "town"]
+       end
+     end
+     flow.complete
+   end
+   
+   
 end
