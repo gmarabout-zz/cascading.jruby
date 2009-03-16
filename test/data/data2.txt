@@ -1,0 +1,14 @@
+SMITH          	1				Paris
+JOHNSON         2				New-York
+WILLIAMS        3				London
+JONES           4				San Francisco
+BROWN           5				Dublin
+DAVIS           6				Rome
+MILLER          7				Munich
+WILSON          8				Berlin
+MOORE           9				Amsterdam
+TAYLOR         10				Bruxelles
+ANDERSON       11				Paris
+THOMAS         12				Lyon
+JACKSON        13				Barcelona
+WHITE          14				Athene
