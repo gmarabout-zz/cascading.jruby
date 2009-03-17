@@ -85,7 +85,7 @@ module Cascading
         pipe.tail_pipe
       end
 
-      node.make_pipe(Java::CascadingPipe::GroupBy, node.tail_pipe, pipes.to_java(Java::CascadingPipe::Pipe))
+      node.make_pipe(Java::CascadingPipe::GroupBy, pipes.to_java(Java::CascadingPipe::Pipe))
     end
 
     def every(node, *args)     
