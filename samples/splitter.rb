@@ -10,7 +10,6 @@ flow = Cascading::Flow.new("copy") do
   
   assembly "copy" do
 
-      # Split "line" using a JSONSplitter
       split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
 
       group_by "score1"

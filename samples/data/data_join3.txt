@@ -1,0 +1,3 @@
+1				Cannes
+2				Boston
+3				Paris

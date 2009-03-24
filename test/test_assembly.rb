@@ -228,7 +228,6 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
       assembly "copy" do
 
-        # Split "line" using a JSONSplitter
         split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
 
         assert_size_equals 4
@@ -251,7 +250,6 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
       assembly1 = assembly "data1" do
 
-        # Split "line" using a JSONSplitter
         split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
         
         assert_size_equals 4
@@ -263,7 +261,6 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
       assembly2 = assembly "data2" do
 
-        # Split "line" using a JSONSplitter
         split "line", :pattern => /[.,]*\s+/, :into=>["name",  "id", "town"], :output => ["name",  "id", "town"]
 
         assert_size_equals 3
@@ -293,7 +290,6 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
        assembly1 = assembly "data1" do
 
-         # Split "line" using a JSONSplitter
          split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
 
          debug :print_fields=>true
@@ -302,7 +298,6 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
        assembly2 = assembly "data2" do
 
-         # Split "line" using a JSONSplitter
          split "line", :pattern => /[.,]*\s+/, :into=>["name",  "code", "town"], :output => ["name",  "code", "town"]
 
          debug :print_fields=>true

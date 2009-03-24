@@ -27,10 +27,8 @@ flow = Cascading::Flow.new("copy_to_mysql") do
       count      
       rename ["score2"],  ["score"]      
     end
-    
-    
+        
     union b1, b2
-    
   end
 end 
 

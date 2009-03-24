@@ -175,12 +175,8 @@ module Cascading
     # The methods outputs all fields.
     # The named options are:
     def insert(args)
-      keys = []
-      values = []
-      args.each do |k, v|
-        keys << k
-        values << v
-      end
+      keys = args.keys
+      values = args.values
       
       each all_fields, :function => insert_function(keys, :values => values), :output => all_fields
     end

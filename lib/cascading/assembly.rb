@@ -13,7 +13,9 @@ require 'cascading/ext/array'
 module Cascading
 
   class AssemblyFactory 
-
+    
+    
+    # Builds a join (CoGroup) pipe.
     def join(node, *args)
       options = args.extract_options!
       
@@ -37,8 +39,7 @@ module Cascading
           group_fields << fields(v)
         end
       end
-      
-     
+         
       group_fields = group_fields.to_java(Java::CascadingTuple::Fields)
        
       declared_fields = options[:declared_fields] 
@@ -50,10 +51,7 @@ module Cascading
         joiner = Java::CascadingPipeCogroup::InnerJoin.new
       end
   
-      
-  
-      parameters = [pipes.to_java(Java::CascadingPipe::Pipe), group_fields, declared_fields, joiner].compact
-      
+      parameters = [pipes.to_java(Java::CascadingPipe::Pipe), group_fields, declared_fields, joiner].compact    
       node.make_pipe(Java::CascadingPipe::CoGroup, *parameters)
     end
     
@@ -76,18 +74,22 @@ module Cascading
       reverse = options[:reverse]
 
       parameters = [node.tail_pipe, group_fields, sort_fields, reverse].compact
-       node.make_pipe(Java::CascadingPipe::GroupBy, *parameters)
+      node.make_pipe(Java::CascadingPipe::GroupBy, *parameters)
     end
 
+    # Unifies several pipes sharing the same field structure.
+    # This actually creates a GroupBy pipe.
+    # It expects a list of assemblies as parameter. 
     def union_pipes(node, *args)
       pipes = args[0].map do |pipe|
-        #puts pipe.class
-        pipe.tail_pipe
+        assembly = Assembly.get(pipe)
+        assembly.tail_pipe
       end
 
       node.make_pipe(Java::CascadingPipe::GroupBy, pipes.to_java(Java::CascadingPipe::Pipe))
     end
 
+    # Builds an basic _every_ pipe, and adds it to the current assembly.
     def every(node, *args)     
       # puts "Create every pipe" 
       options = args.extract_options!
@@ -100,6 +102,12 @@ module Cascading
       node.make_pipe(Java::CascadingPipe::Every, *parameters)   
     end
 
+    # Builds a basic _each_ pipe, and adds it to the current assembly.
+    # --
+    # Example:
+    #     each "line", :filter=>regex_splitter(["name", "val1", "val2", "id"], 
+    #                  :pattern => /[.,]*\s+/), 
+    #                  :output=>["id", "name", "val1", "val2"] 
     def each(node, *args)
       # puts "Create each pipe"
       options = args.extract_options!
@@ -112,16 +120,16 @@ module Cascading
       node.make_pipe(Java::CascadingPipe::Each, *parameters)
     end   
 
-    def co_group(node, *args)
-      raise "not implemented yet"
-    end
-
-    # Keeps only the specified fields in the assembly:
+    # Restricts the current assembly to the specified fields.
+    # --
+    # Example:
+    #     restrict_to "field1", "field2"
     def restrict_to(node, *args)
       operation = Java::CascadingOperation::Identity.new() 
       node.make_pipe(Java::CascadingPipe::Each, node.tail_pipe, Cascading.fields(args), operation)
     end
 
+    # Renames the first list of fields to the second one.
     def rename(node, *args)
       old_names = args[0]
       new_names = args[1]
@@ -151,6 +159,9 @@ module Cascading
 
       node.make_pipe(Java::CascadingPipe::Each, node.tail_pipe, assertion_level, assertion)
     end
+    
+    
+    alias co_group join
 
   end # class Assembly
 

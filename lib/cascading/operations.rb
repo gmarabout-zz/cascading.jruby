@@ -128,19 +128,6 @@ module Cascading
       Java::CascadingOperationExpression::ExpressionFilter.new(*arguments)
     end
 
-    # def json_generator(names)
-    #     fields = []
-    #     paths = []
-    #     names.each do |k,v|
-    #       fields << k
-    #       paths << v
-    #     end
-    #     fields = Cascading.fields(fields)
-    # 
-    #     parameters = [fields, paths.to_java(java.lang.String)].compact
-    #     Java::OrgCascadingJson::JSONGenerator.new(*parameters)
-    #   end
-
     def date_parser(field, format)
       fields = fields(field)
       Java::CascadingOperationText::DateParser.new(fields, format)
