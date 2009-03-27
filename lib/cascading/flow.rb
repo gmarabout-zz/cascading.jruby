@@ -55,7 +55,9 @@ module Cascading
 
     def complete
       parameters = build_connect_parameter()
-      flow = Java::CascadingFlow::FlowConnector.new.connect(*parameters)
+      props = java.util.Properties.new()
+      #Java::CascadingFlow::FlowConnector.setApplicationJarClass(props, org.jruby.Main.java_class)
+      flow = Java::CascadingFlow::FlowConnector.new().connect(*parameters)
       flow.complete
     end
     

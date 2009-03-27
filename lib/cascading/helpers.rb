@@ -227,7 +227,7 @@ module Cascading
     # (all fields, by default).
     def distinct(*fields)
       #group_by fields || all_fields
-      every fields, :aggregator=>Java::CascadingOperationAggregator::First.new, :output=>results_fields
+      every fields, :aggregator=>Java::CascadingOperationAggregator::First.new, :output => results_fields
     end
       
       

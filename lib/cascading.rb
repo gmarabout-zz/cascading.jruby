@@ -70,10 +70,14 @@ module Cascading
 end  # module Cascading
 
 Cascading.require_all_libs_relative_to(__FILE__)
-Cascading.require_all_jars()
-Cascading.require_all_jars( ::File.join(::File.dirname(__FILE__), "..", "lib-ext"))
-Cascading.require_all_jars(Cascading::HADOOP_HOME)
-Cascading.require_all_jars(Cascading::CASCADING_HOME)
+
+if Cascading::HADOOP_HOME
+  Cascading.require_all_jars(Cascading::HADOOP_HOME)
+end
+
+if Cascading::CASCADING_HOME  
+  Cascading.require_all_jars(Cascading::CASCADING_HOME)
+end
 
 
 # include module to make them available at top package

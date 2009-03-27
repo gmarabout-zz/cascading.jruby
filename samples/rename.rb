@@ -14,7 +14,7 @@ flow = Cascading::Flow.new("rename") do
 
     assert Java::CascadingOperationAssertion::AssertSizeEquals.new(4)
 
-    rename ["name"], ["coucou"]
+    rename ["name", "score1", "score2", "id"], ["new_name", "new_score1", "new_score2", "id"]
    
     assert Java::CascadingOperationAssertion::AssertSizeEquals.new(4)
    

@@ -134,7 +134,9 @@ module Cascading
       old_names = args[0]
       new_names = args[1]
       operation = Java::CascadingOperation::Identity.new(Cascading.fields(new_names))
-      node.make_pipe(Java::CascadingPipe::Each, node.tail_pipe, Cascading.fields(old_names), operation, Cascading.fields(new_names))
+      
+      node.make_pipe(Java::CascadingPipe::Each, node.tail_pipe, Cascading.fields(old_names), operation) 
+  
     end
 
     def copy(node, *args)
@@ -153,10 +155,8 @@ module Cascading
 
     def assert(node, *args)
       options = args.extract_options!
-
       assertion = args[0]
       assertion_level = options[:level] || Java::CascadingOperation::AssertionLevel::STRICT
-
       node.make_pipe(Java::CascadingPipe::Each, node.tail_pipe, assertion_level, assertion)
     end
     
