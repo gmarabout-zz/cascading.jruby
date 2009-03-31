@@ -8,3 +8,6 @@ output
 *.iml
 *.ipr
 *.iws
+classes/
+.classpath
+.project

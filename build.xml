@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+
+<!--
+	~ Copyright (c) 2009 Grégoire Marabout
+	~
+	~ This work has been released into the public domain
+	~ by the copyright holder. This applies worldwide.
+	~
+	~ In case this is not legally possible:
+	~ The copyright holder grants any entity the right
+	~ to use this work for any purpose, without any
+	~ conditions, unless such conditions are required by law.
+-->
+
+<project name="cascading.jruby" default="build" basedir=".">
+	<property environment="env" />
+	<property file="${basedir}/build.properties" />
+	<property file="${basedir}/version.properties" />
+	
+	<property name="cascading.home" location="${env.CASCADING_HOME}" />
+	<property name="cascading.libs" value="${cascading.home}/lib" />
+
+	<property name="hadoop.home" location="${env.HADOOP_HOME}" />
+	<property name="hadoop.lib" location="${hadoop.home}/lib" />
+
+	<property name="src.jruby" location="${basedir}/lib" />
+	<property name="src.java" location="${basedir}/src" />
+	<property name="build.classes" location="${basedir}/classes" />
+
+	<property name="jar.dir" location="${basedir}/jar"/>
+	
+	<path id="project.class.path">
+		<fileset dir="${cascading.home}">
+			<include name="*.jar" />
+		</fileset>
+
+		<fileset dir="${cascading.libs}">
+			<include name="*.jar" />
+		</fileset>
+
+		<fileset dir="${hadoop.lib}">
+			<include name="*.jar" />
+		</fileset>
+
+		<fileset dir="${hadoop.home}">
+			<include name="*-core.jar" />
+		</fileset>
+
+		<fileset dir="${env.JRUBY_HOME}">
+			<include name="jruby-complete*.jar" />
+		</fileset>
+	</path>
+
+	<target name="clean">
+		<echo message="cleaning..." />
+		<delete dir="${build.classes}" />
+		<delete dir="${jar.dir}" />
+	</target>
+
+	<target name="init">
+		<mkdir dir="${build.classes}" />
+		<mkdir dir="${jar.dir}/" />
+		<property name="CLASSPATH" refid="project.class.path" />
+	</target>
+
+	<target name="build" depends="init">
+		<javac srcdir="${src.java}" destdir="${build.classes}" verbose="off" debug="${javac.debug}">
+			<classpath refid="project.class.path" />
+		</javac>
+		<copy todir="${build.classes}">
+			<fileset dir="${src.java}">
+				<include name="**/*.rb"/>
+			</fileset>
+		</copy>
+	</target>
+
+</project>

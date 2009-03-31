@@ -1,0 +1,81 @@
+#!/usr/bin/env jruby
+
+require 'java'
+
+$LOAD_PATH.unshift(::File.expand_path(::File.join(::File.dirname(__FILE__), "..", "jruby")))
+$LOAD_PATH.unshift(::File.expand_path(::File.join(::File.dirname(__FILE__), "..", "jobs")))
+
+require 'rubygems'
+require 'cascading'
+require 'fileutils'
+require 'optparse'
+require 'ostruct'
+
+include FileUtils
+
+TEMP_DIR = "_temp_jars"
+TEMP_DIR_LIB = ::File.join(TEMP_DIR, "lib")
+CASCADING_JRUBY_HOME = Cascading::PATH
+CASCADING_HOME = ENV["CASCADING_HOME"]
+JRUBY_HOME = ENV["JRUBY_HOME"]
+
+options = OpenStruct.new
+options.input = ARGV[0]
+options.output = "job.jar"
+options.libs = []
+
+OptionParser.new do |opts|
+   opts.banner = "Usage: make_job [options]"
+
+   opts.on("-o", "--output", "Set the name of the output jar file (job.jar by default)") do |v|
+     options.output = v
+   end
+
+   opts.on("-l", "--lib LIBPATH", "Set the path where external libraries are stored") do |path|
+     options.libs << path
+   end
+ end.parse!
+ 
+p options
+
+# Create temp dir
+mkdir(TEMP_DIR) unless File.exists? TEMP_DIR
+mkdir(TEMP_DIR_LIB) unless File.exists? TEMP_DIR_LIB
+
+def copy(from, to, message=nil)
+  puts message if message 
+  Dir.glob(from).each do |f|
+    cp_r(f, to)
+  end
+end
+
+# Copy job files into TEMP_DIR:
+files = ::File.join(options.input, "**", "*.rb")
+copy(files, TEMP_DIR,  "Copying job files to temp dir...")
+
+# Copy external libs into TEMP_DIR:
+for lib in options.libs
+  files = ::File.join(lib, "**", "*.jar")
+  copy(files, TEMP_DIR_LIB,  "Copying external libs to temp dir...")
+end
+
+files = ::File.join(CASCADING_JRUBY_HOME, "lib", "**")
+copy(files, TEMP_DIR, "Copying cascading.jruby files to temp dir...")
+
+# Copy cascading.jruby.runner classes:
+files = ::File.join("classes", "**")
+copy(files, TEMP_DIR, "Copying cascading.jruby.runner files to temp dir...")
+
+# Copy cascading jars in _temp_jars/lib
+files = ::File.join(CASCADING_HOME, "**", "*.jar")
+copy(files, TEMP_DIR_LIB, "Copying Cascading jars to temp dir...")
+
+# Jar the whole thing:
+puts "Building final jar file (#{options.output})..."
+system("jar cvf #{options.output} -C #{TEMP_DIR}/ .")
+
+# Clean-up things
+puts "Cleaning temp dir..."
+rm_rf(TEMP_DIR)
+
+puts "Finished. Have Fun!"
