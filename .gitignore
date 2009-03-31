@@ -11,3 +11,4 @@ output
 classes/
 .classpath
 .project
+pkg/

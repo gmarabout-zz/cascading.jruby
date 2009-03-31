@@ -63,8 +63,8 @@ files = ::File.join(CASCADING_JRUBY_HOME, "lib", "**")
 copy(files, TEMP_DIR, "Copying cascading.jruby files to temp dir...")
 
 # Copy cascading.jruby.runner classes:
-files = ::File.join("classes", "**")
-copy(files, TEMP_DIR, "Copying cascading.jruby.runner files to temp dir...")
+files = ::File.join(CASCADING_JRUBY_HOME, "classes", "**")
+copy(files, TEMP_DIR, "Copying cascading.jruby files to temp dir...")
 
 # Copy cascading jars in _temp_jars/lib
 files = ::File.join(CASCADING_HOME, "**", "*.jar")

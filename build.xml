@@ -46,8 +46,8 @@
 			<include name="*-core.jar" />
 		</fileset>
 
-		<fileset dir="${env.JRUBY_HOME}">
-			<include name="jruby-complete*.jar" />
+		<fileset dir="${env.JRUBY_HOME}/lib">
+			<include name="*.jar" />
 		</fileset>
 	</path>
 
