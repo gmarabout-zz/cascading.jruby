@@ -189,6 +189,11 @@ namespace :gem do
   task :cleanup do
     sh "#{SUDO} #{GEM} cleanup #{PROJ.gem._spec.name}"
   end
+
+  desc 'Remove gem build files'
+  task :clean do
+    `rm -rf pkg`
+  end
 end  # namespace :gem
 
 

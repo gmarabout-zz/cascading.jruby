@@ -28,6 +28,10 @@ task :run do
   require "samples/#{ARGS[0]}"
 end
 
+desc 'Remove gem and Java build files'
+task :clean => ['ant:clean', 'gem:clean'] do
+  puts 'Build files removed'
+end
 
 PROJ.name = 'cascading.jruby'
 PROJ.authors = 'Grégoire Marabout'

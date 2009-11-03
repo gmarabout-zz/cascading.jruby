@@ -2,7 +2,7 @@ Some hacking info on cascading.jruby
 
  * cascading.jruby can be packaged as a gem. To do so, you must generate the necessary packaging files:
 
-	jruby -S rake gem
+        ant build; jruby -S rake gem
 
 will produce the gem in the pkg/ dub-directory.
 After that, just cd this directory and:

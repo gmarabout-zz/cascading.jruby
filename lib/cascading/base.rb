@@ -49,6 +49,8 @@ module Cascading
           @children << child
         end
         return child
+      else
+        super(name, *args, &block)
       end
     end
 

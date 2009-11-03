@@ -150,7 +150,7 @@ module Cascading
     # A pipe that does nothing.
     def pass(node, *args)
       operation = Java::CascadingOperation::Identity.new 
-      node.make_pipe(Java::CascadingPipe::Each, all_fields, operation)
+      node.make_pipe(Java::CascadingPipe::Each, node.tail_pipe, Cascading.fields(all_fields), operation)
     end
 
     def assert(node, *args)

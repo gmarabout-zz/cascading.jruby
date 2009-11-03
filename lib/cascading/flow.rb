@@ -53,9 +53,13 @@ module Cascading
       end
     end
 
-    def complete
+    def connect
       parameters = build_connect_parameter()
-      flow = Java::CascadingFlow::FlowConnector.new().connect(*parameters)
+      Java::CascadingFlow::FlowConnector.new().connect(*parameters)
+    end
+
+    def complete
+      flow = connect
       flow.complete
     end
     
