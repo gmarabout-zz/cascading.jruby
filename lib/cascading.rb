@@ -15,8 +15,8 @@ module Cascading
   LIBPATH = ::File.expand_path(::File.dirname(__FILE__)) + ::File::SEPARATOR
   PATH = ::File.dirname(LIBPATH) + ::File::SEPARATOR
   
-  CASCADING_HOME = ENV["CASCADING_HOME"]
-  HADOOP_HOME = ENV["HADOOP_HOME"]
+  CASCADING_HOME = ENV['CASCADING_HOME']
+  HADOOP_HOME = ENV['HADOOP_HOME']
   
   # :startdoc:
 
@@ -70,15 +70,8 @@ module Cascading
 end  # module Cascading
 
 Cascading.require_all_libs_relative_to(__FILE__)
-
-if Cascading::HADOOP_HOME
-  Cascading.require_all_jars(Cascading::HADOOP_HOME)
-end
-
-if Cascading::CASCADING_HOME  
-  Cascading.require_all_jars(Cascading::CASCADING_HOME)
-end
-
+Cascading.require_all_jars(Cascading::HADOOP_HOME) if Cascading::HADOOP_HOME
+Cascading.require_all_jars(Cascading::CASCADING_HOME) if Cascading::CASCADING_HOME
 
 # include module to make them available at top package
 include Cascading

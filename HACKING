@@ -4,15 +4,12 @@ Some hacking info on cascading.jruby
 
         ant build; jruby -S rake gem
 
-will produce the gem in the pkg/ dub-directory.
-After that, just cd this directory and:
+will produce the gem in the pkg/ sub-directory. After that, just cd to this directory and:
 
 	jruby -S rake install cascading.jruby-xxx.gem
-	
- * The "Cascading::Operations" module is mixed-in the Cascading::Assembly class to provide some shortcuts
- for common operations. I don't know if this is the best way to do it, though... 
+
+ * The "Cascading::Operations" module is mixed-in the Cascading::Assembly class to provide some shortcuts for common operations. I don't know if this is the best way to do it, though... 
 
  * The high level commands for creating new pipes are defined in cascading/helpers.rb.
 
- * The fil cascading/cascading.rb defines global helper methods for cascading like tap creation, fields
-creation, etc. 
+ * The file cascading/cascading.rb defines global helper methods for cascading like tap creation, fields creation, etc. 
