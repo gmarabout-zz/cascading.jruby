@@ -166,5 +166,9 @@ END
   end
 
   # Register default primary keys
-  Scope.register_scheme_key(Java::CascadingScheme::TextLine, ['offset'])
+  begin
+    Scope.register_scheme_key(Java::CascadingScheme::TextLine, ['offset'])
+  rescue NameError => ne
+    puts 'WARNING: Could not register primary key for TextLine Scheme as it was not on the class path'
+  end
 end
