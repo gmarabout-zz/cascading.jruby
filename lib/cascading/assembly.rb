@@ -214,9 +214,14 @@ module Cascading
       new_names = old_names.map{ |name| name_map[name] || name }
       invalid = name_map.keys.sort - old_names
       raise "invalid names: #{invalid.inspect}" unless invalid.empty?
+
+      old_key = node.scope.primary_key_fields.to_a
+      new_key = old_key.map{ |name| name_map[name] || name }
+
       new_fields = Cascading.fields(new_names)
       operation = Java::CascadingOperation::Identity.new(new_fields)
       node.make_each(Java::CascadingPipe::Each, node.tail_pipe, all_fields, operation) 
+      node.primary(*new_key)
     end
 
     def cast(node, *args)

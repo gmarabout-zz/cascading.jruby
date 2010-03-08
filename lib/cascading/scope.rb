@@ -97,9 +97,9 @@ END
       case flow_element
         when Java::CascadingPipe::Each
           # assert incoming_scopes.size == 1
-          project_or_rename_primary_key(incoming_scopes.first.primary_key_fields,
-                                        incoming_scopes.first.values_fields.to_a,
-                                        scope.values_fields.to_a)
+          project_primary_key(incoming_scopes.first.primary_key_fields,
+                              incoming_scopes.first.values_fields.to_a,
+                              scope.values_fields.to_a)
         when Java::CascadingPipe::Every
           # assert incoming_scopes.size == 1
           incoming_scopes.first.primary_key_fields
@@ -121,38 +121,19 @@ END
       end
     end
 
-    def self.project_or_rename_primary_key(primary_key, old_fields, new_fields)
-      if old_fields.size > new_fields.size # Project must remove fields
-        #puts "Projecting: [#{primary_key}], #{old_fields.inspect}, #{new_fields.inspect}"
-        project_primary_key(primary_key, old_fields, new_fields)
-      elsif old_fields.size == new_fields.size # Rename can't introduce fields
-        #puts "Renaming: [#{primary_key}], #{old_fields.inspect}, #{new_fields.inspect}"
-        rename_primary_key(primary_key, old_fields, new_fields)
-      else
-        #puts "No-op: [#{primary_key}], #{old_fields.inspect}, #{new_fields.inspect}"
-        primary_key
-      end
-    end
-
     def self.project_primary_key(primary_key, old_fields, new_fields)
       return nil if primary_key.nil?
       primary_key = primary_key.to_a
       primary_key if (primary_key & new_fields) == primary_key
     end
 
-    def self.rename_primary_key(primary_key, old_fields, new_fields)
-      return nil if primary_key.nil?
-      indices = primary_key.to_a.map{ |f| old_fields.index(f) }
-      new_fields.values_at(*indices)
-    end
-
     def self.grouping_primary_key_fields(flow_element, incoming_scopes, scope)
       case flow_element
         when Java::CascadingPipe::Each
           # assert incoming_scopes.size == 1
-          project_or_rename_primary_key(incoming_scopes.first.grouping_primary_key_fields,
-                                        incoming_scopes.first.grouping_fields.to_a,
-                                        scope.grouping_fields.to_a)
+          project_primary_key(incoming_scopes.first.grouping_primary_key_fields,
+                              incoming_scopes.first.grouping_fields.to_a,
+                              scope.grouping_fields.to_a)
         when Java::CascadingPipe::Every
           # assert incoming_scopes.size == 1
           incoming_scopes.first.grouping_primary_key_fields
