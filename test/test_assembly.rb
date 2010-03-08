@@ -256,7 +256,7 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
       source "data1", tap("test/data/data1.txt")
       source "data2", tap("test/data/data2.txt")
-      sink "joined", tap('output/joined', :replace=>true)
+      sink "joined", tap('output/joined', :sink_mode => :replace)
 
       assembly1 = assembly "data1" do
 
