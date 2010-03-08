@@ -202,17 +202,24 @@ class TC_Assembly < Test::Unit::TestCase
 
   end
 
+  # Fixed this test, but it isn't even valid.  You shouldn't be able to follow
+  # an Each with an Every.
   def test_full_assembly
-    assembly = Cascading::Assembly.new "test" do
-      each("Field1", :output => "Field1", :filter => identity)
-      every(:aggregator => count_function)
+    assert_raise CascadingException do
+      Cascading::Flow.new 'test' do
+        source 'test', tap('test/data/data1.txt')
+
+        $assembly = assembly 'test' do
+          each('offset', :output => 'offset_copy',
+              :filter => Java::CascadingOperation::Identity.new(fields('offset_copy')))
+          every(:aggregator => count_function)
+        end
+      end
+
+      pipe = $assembly.tail_pipe
+
+      assert pipe.is_a? Java::CascadingPipe::Every
     end
-
-
-    pipe = assembly.tail_pipe
-
-    assert pipe.is_a? Java::CascadingPipe::Every
-
   end
 
 end
