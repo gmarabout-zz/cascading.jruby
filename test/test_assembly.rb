@@ -224,7 +224,7 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
     flow = Cascading::Flow.new("splitter") do
 
       source "copy", tap("test/data/data1.txt")
-      sink "copy", tap('output/splitter', :replace=>true)
+      sink "copy", tap('output/splitter', :sink_mode => :replace)
 
       assembly "copy" do
 
@@ -237,7 +237,17 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
         debug :print_fields=>true
       end
     end
-    flow.complete
+    # Had to wrap this in a CascadingException so that I could see the message
+    # of the deepest cause -- which told me the output already existed.
+    #
+    # We can safely wrap all calls to Cascading in CE once we change it to
+    # print the stack trace of -every- exception in the cause chain (otherwise
+    # it eats the stack trace and you can't dig down into the Cascading code).
+    begin
+      flow.complete
+    rescue NativeException => e
+      throw CascadingException.new(e, 'Flow failed to complete')
+    end
   end
 
 
@@ -307,8 +317,6 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
          join :on => {assembly1=>["name", "id"], assembly2=>["name", "code"]}, :declared_fields => ["name", "score1", "score2", "id", "name2", "code", "town"]
        end
      end
-     flow.complete
+    flow.complete
    end
-   
-   
 end
