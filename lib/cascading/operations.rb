@@ -11,34 +11,44 @@ module Cascading
       Java::CascadingOperation::Identity.new
     end
 
-    def count_function(*args)
-      options = args.extract_options!
-      if args.empty?
-        # By default, output field is "count"
-        args = ["count"]
-      end
-      parameters = [Cascading.fields(args)].compact
-      Java::CascadingOperationAggregator::Count.new(*parameters)
-    end
-
     def sum_function(*args)
       options = args.extract_options!
-      if args.empty?
-        # By default, output field is "sum"
-        args = ["sum"]
-      end
-      parameters = [Cascading.fields(args)].compact
+      raise "Need to specify args" if args.empty?
+      type = options[:type] || java.lang.Double.java_class
+      parameters = [Cascading.fields(args),type].compact.to_java
+
       Java::CascadingOperationAggregator::Sum.new(*parameters)
     end
 
-    def average_function(*args)
+    def aggregator_function(args, aggregator_klass)
       options = args.extract_options!
-      if args.empty?
-        # By default, output field is "average"
-        args = ["average"]
-      end
-      parameters = [Cascading.fields(args)].compact
-      Java::CascadingOperationAggregator::Average.new(*parameters)
+      ignore_values = options[:sql] ? [nil].to_java(java.lang.Object) : nil
+      parameters = [Cascading.fields(args), ignore_values].compact
+      aggregator_klass.new(*parameters)
+    end
+
+    def count_function(*args)
+      aggregator_function(args, Java::CascadingOperationAggregator::Count)
+    end
+
+    def average_function(*args)
+      aggregator_function(args, Java::CascadingOperationAggregator::Average)
+    end
+
+    def first_function(*args)
+      aggregator_function(args, Java::CascadingOperationAggregator::First)
+    end
+
+    def min_function(*args)
+      aggregator_function(args, Java::CascadingOperationAggregator::Min)
+    end
+
+    def max_function(*args)
+      aggregator_function(args, Java::CascadingOperationAggregator::Max)
+    end
+
+    def last_function(*args)
+      aggregator_function(args, Java::CascadingOperationAggregator::Last)
     end
 
     def regex_parser(*args)
@@ -100,8 +110,22 @@ module Cascading
       options=args.extract_options!
       fields = Cascading.fields(args)
       values = options[:values] 
-      parameters = [fields, values.to_java(java.lang.Comparable)].compact
+
+      parameters = [fields, to_java_comparable_array(values)].compact
       Java::CascadingOperation::Insert.new(*parameters)
+    end
+
+    def to_java_comparable_array(arr)
+      (arr.map do |v|
+        case v.class
+        when Fixnum
+          java.lang.Integer.new(v)
+        when Float
+          java.lang.Double.new(v)
+        else
+          java.lang.String.new(v.to_s)
+        end
+      end).to_java(java.lang.Comparable)
     end
 
     def expression_filter(*args)
@@ -133,18 +157,20 @@ module Cascading
       Java::CascadingOperationText::DateParser.new(fields, format)
     end
 
-    def date_formatter(fields, format)
+    def date_formatter(fields, format, timezone=nil)
       fields = fields(fields)
-      Java::CascadingOperationText::DateFormatter.new(fields, format)      
+      timezone = Java::JavaUtil::TimeZone.get_time_zone(timezone) if timezone
+      arguments = [fields, format, timezone].compact
+      Java::CascadingOperationText::DateFormatter.new(*arguments)
     end
 
     def regex_filter(*args)
       options = args.extract_options!
 
       pattern = args[0]
-      remove_math = options[:remove_match]
+      remove_match = options[:remove_match]
       match_each_element = options[:match_each_element] 
-      parameters = [pattern.to_s, remove_math, match_each_element].compact
+      parameters = [pattern.to_s, remove_match, match_each_element].compact
       Java::CascadingOperationRegex::RegexFilter.new(*parameters)
     end
 

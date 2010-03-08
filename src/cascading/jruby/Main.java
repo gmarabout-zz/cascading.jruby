@@ -30,6 +30,7 @@ public class Main {
 		Ruby runtime = Ruby.newInstance(config);
 
 		runtime.executeScript("require '" + name + "'", name);
-		runtime.executeScript("require 'cascading/jruby/runner'", "runner");
+        // gfodor
+		runtime.executeScript("require 'cascading/jruby/runner'", null);
 	}
 }

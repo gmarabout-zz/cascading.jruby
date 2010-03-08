@@ -270,7 +270,7 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
       end
 
       assembly "joined" do
-        join assembly1, assembly2, :group_fields => ["name", "id"], :declared_fields => ["name", "score1", "score2", "id", "name2", "id2", "town"]
+        join assembly1, assembly2, :on => ["name", "id"], :declared_fields => ["name", "score1", "score2", "id", "name2", "id2", "town"]
       
         assert_size_equals 7
 
@@ -304,7 +304,7 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
        end
 
        assembly "joined" do
-         join :group_fields => {assembly1=>["name", "id"], assembly2=>["name", "code"]}, :declared_fields => ["name", "score1", "score2", "id", "name2", "code", "town"]
+         join :on => {assembly1=>["name", "id"], assembly2=>["name", "code"]}, :declared_fields => ["name", "score1", "score2", "id", "name2", "code", "town"]
        end
      end
      flow.complete

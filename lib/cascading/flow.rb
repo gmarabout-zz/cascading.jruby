@@ -13,9 +13,9 @@ module Cascading
     def assembly(node, *args, &block)
       name = args[0]
       if block
-        return Cascading::Assembly.new(name, &block)
+        Cascading::Assembly.new(name, nil, node.outgoing_scopes, &block)
       else
-        return Cascading::Assembly.get(name)
+        Cascading::Assembly.get(name)
       end
     end
   end
@@ -23,11 +23,10 @@ module Cascading
 
   class Flow < Cascading::Node
 
-    attr_accessor :sources, :sinks    
+    attr_accessor :properties, :sources, :sinks, :outgoing_scopes
 
     def initialize(name, parent=nil, &block)
-      @sources = {}
-      @sinks = {}
+      @properties, @sources, @sinks, @outgoing_scopes = {}, {}, {}, {}
       super(name, parent, &block)
     end
 
@@ -48,18 +47,59 @@ module Cascading
     def source(*args)
       if (args.size == 2)
         @sources[args[0]] = args[1]
+        @outgoing_scopes[args[0]] = Scope.tap_scope(args[1], args[0])
       elsif (args.size == 1)
         @sources[@name] = args[0]
+        @outgoing_scopes[@name] = Scope.empty_scope(@name)
       end
     end
 
-    def connect
-      parameters = build_connect_parameter()
-      Java::CascadingFlow::FlowConnector.new().connect(*parameters)
+    def scope(name = nil)
+      raise 'Must specify name if no children have been defined yet' unless name || @children.last
+      name ||= @children.last.name
+      @outgoing_scopes[name]
     end
 
-    def complete
-      flow = connect
+    def debug_scope(name = nil)
+      scope = scope(name)
+      name ||= @children.last.name
+      puts "Scope for '#{name}':\n  #{scope}"
+    end
+
+    def sink_metadata
+      @sinks.keys.inject({}) do |sink_metadata, sink_name|
+        raise "Cannot sink undefined assembly '#{sink_name}'" unless @outgoing_scopes[sink_name]
+        sink_metadata[sink_name] = {
+          :field_names => @outgoing_scopes[sink_name].values_fields.to_a,
+          :primary_key => @outgoing_scopes[sink_name].primary_key_fields.to_a
+        }
+        sink_metadata
+      end
+    end
+
+    # TODO: support all codecs, support list of codecs
+    def compress_output(codec, type)
+      properties['mapred.output.compress'] = 'true'
+      properties['mapred.output.compression.codec'] = case codec
+        when :default then Java::OrgApacheHadoopIoCompress::DefaultCodec.java_class.name
+        else raise "Codec #{codec} not yet supported by cascading.jruby"
+        end
+      properties['mapred.output.compression.type'] = case type
+        when :none   then Java::OrgApacheHadoopIo::SequenceFile::CompressionType::NONE.to_s
+        when :record then Java::OrgApacheHadoopIo::SequenceFile::CompressionType::RECORD.to_s
+        when :block  then Java::OrgApacheHadoopIo::SequenceFile::CompressionType::BLOCK.to_s
+        else raise "Compression type '#{type}' not supported"
+        end
+    end
+
+    def connect(properties = nil)
+      properties ||= java.util.HashMap.new(@properties)
+      parameters = build_connect_parameter()
+      Java::CascadingFlow::FlowConnector.new(properties).connect(*parameters)
+    end
+
+    def complete(properties = nil)
+      flow = connect(properties)
       flow.complete
     end
     
@@ -73,28 +113,27 @@ module Cascading
     end
     
     def make_tap_parameter taps
-      if taps.size == 1
-        return taps.values.first
-      else
-        return taps
-      end
-    end
-    
-    def make_pipes
-      if @sinks.size==1
-        return children.last.tail_pipe
-      else
-        pipes = []
-        @sinks.keys.each do |key|
-          assembly = Assembly.get(key)
-          if assembly
-            pipes << assembly.tail_pipe
-          end
+      taps.keys.inject({}) do |map, key|
+        assembly = Assembly.get(key)
+
+        if assembly
+          map[assembly.tail_pipe.name] = taps[key]
+        else
+          map[key] = taps[key]
         end
-        return pipes.to_java(Java::CascadingPipe::Pipe)
+
+        map
       end
     end
-    
-    
+
+    def make_pipes
+      pipes = []
+      @sinks.keys.each do |key|
+        assembly = Assembly.get(key)
+        raise "Undefined assembly #{key}" unless assembly
+        pipes << assembly.tail_pipe
+      end
+      return pipes.to_java(Java::CascadingPipe::Pipe)
+    end
   end
 end

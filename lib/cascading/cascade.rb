@@ -21,29 +21,36 @@ module Cascading
   end
 
   class Cascade < Cascading::Node
-    attr_accessor :flows
-
-    def initialize(name, parent=nil, &block)
-      @flows = []
-      super(name, parent, &block)
+    def draw(dir, properties = nil)
+      @children.each do |flow|
+        flow.connect(properties).writeDOT("#{dir}/#{flow.name}.dot")
+      end
     end
 
-    def flow(name, *args, &block)
-      # Call method_missing to send to factory and side-effect @children
-      @flows << method_missing(:flow, *args, &block)
+    def sink_metadata
+      @children.inject({}) do |sink_fields, flow|
+        sink_fields[flow.name] = flow.sink_metadata
+        sink_fields
+      end
     end
 
-    def complete
-      parameters = make_flows(@flows)
+    def write_sink_metadata(file_name)
+      File.open(file_name, 'w') do |file|
+        YAML.dump(sink_metadata, file)
+      end
+    end
+
+    def complete(properties = nil)
+      parameters = make_flows(@children, properties)
       cascade = Java::CascadingCascade::CascadeConnector.new().connect(parameters)
       cascade.complete
     end
 
     private
 
-    def make_flows(flows)
+    def make_flows(flows, properties)
       flow_instances = flows.map do |flow|
-        flow.connect
+        flow.connect(properties)
       end
       flow_instances.to_java(Java::CascadingFlow::Flow)
     end

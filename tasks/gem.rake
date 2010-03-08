@@ -198,7 +198,7 @@ end  # namespace :gem
 
 
 desc 'Alias to gem:package'
-task :gem => 'gem:package'
+task :gem => ['ant:build', 'gem:package']
 
 task :clobber => 'gem:clobber_package'
 remove_desc_for_task 'gem:clobber_package'

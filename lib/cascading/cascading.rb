@@ -16,12 +16,40 @@ module Cascading
       if fields.size == 1
         return fields(fields[0])
       end
+      raise "Fields cannot be nil: #{fields.inspect}" if fields.include?(nil)
     end
     return Java::CascadingTuple::Fields.new([fields].flatten.to_java(java.lang.Comparable))
   end
 
   def all_fields
     Java::CascadingTuple::Fields::ALL
+  end
+
+  def union_fields(*fields)
+    fields(fields.inject([]){ |acc, arr| acc | arr.to_a })
+  end
+
+  def difference_fields(*fields)
+    fields(fields[1..-1].inject(fields.first.to_a){ |acc, arr| acc - arr.to_a })
+  end
+
+  def copy_fields(fields)
+    fields.select(all_fields)
+  end
+
+  def dedup_fields(*fields)
+    raise 'Can only be applied to declarators' unless fields.all?{ |f| f.is_declarator? }
+    fields(dedup_field_names(*fields.map{ |f| f.to_a }))
+  end
+
+  def dedup_field_names(*names)
+    names.inject([]) do |acc, arr|
+      acc + arr.map{ |e| search_field_name(acc, e) }
+    end
+  end
+
+  def search_field_name(names, candidate)
+    names.include?(candidate) ? search_field_name(names, "#{candidate}_") : candidate
   end
 
   def last_grouping_fields
@@ -38,7 +66,7 @@ module Cascading
       fields = fields(fields) 
       return Java::CascadingScheme::TextLine.new(fields)
     else
-      return Java::CascadingScheme::TextLine.new()
+      return Java::CascadingScheme::TextLine.new
     end
   end
 
@@ -48,47 +76,35 @@ module Cascading
       fields = fields(fields) 
       return Java::CascadingScheme::SequenceFile.new(fields)
     else
-      return Java::CascadingScheme::SequenceFile.new()
+      return Java::CascadingScheme::SequenceFile.new(all_fields)
     end
   end
 
-
-  # Creates a c.t.Hfs tap instance.
-  def hfs_tap(*args)
-    opts = args.extract_options!
-    path = args[0] || opts[:path]
-    scheme = opts[:scheme] || text_line_scheme("line")
-    replace = opts[:replace]
-    parameters = [scheme, path, replace].compact
-    Java::CascadingTap::Hfs.new(*parameters)
-  end
-
-  # Creates a c.t.Dfs tap instance.
-  def dfs_tap(*args)
-    opts = args.extract_options!
-    path = args.empty? ? opts[:path] : args[0]
-    scheme = opts[:scheme] || text_line_scheme("line")
-    replace = opts[:replace]
-    parameters = [scheme, path, replace].compact
-    Java::CascadingTap::Dfs.new(*parameters)
-  end
-
-  # Creates a c.t.Lfs tap instance.
-  def lfs_tap(*args)
-    opts = args.extract_options!
-    path = args.empty? ? opts[:path] : args[0]
-    scheme = opts[:scheme] || text_line_scheme("line")
-    replace = opts[:replace]
-    parameters = [scheme, path, replace].compact
-    Java::CascadingTap::Lfs.new(*parameters)
+  def multi_tap(*taps)
+    Java::CascadingTap::MultiTap.new(taps.to_java("cascading.tap.Tap"))
   end
 
   # Generic method for creating taps.
   # It expects a ":kind" argument pointing to the type of tap to create. 
   def tap(*args)
-    opts = args.extract_options
-    fs = opts[:kind] || "hfs"   
-    send("#{fs}_tap", *args) 
+    opts = args.extract_options!
+    path = args.empty? ? opts[:path] : args[0]
+    scheme = opts[:scheme] || text_line_scheme
+    sink_mode = opts[:sink_mode] || :keep
+    sink_mode = case sink_mode
+      when :keep, 'keep'       then Java::CascadingTap::SinkMode::KEEP
+      when :replace, 'replace' then Java::CascadingTap::SinkMode::REPLACE
+      when :append, 'append'   then Java::CascadingTap::SinkMode::APPEND
+      else raise "Unrecognized sink mode '#{sink_mode}'"
+    end
+    fs = opts[:kind] || :hfs
+    klass = case fs
+      when :hfs, 'hfs' then Java::CascadingTap::Hfs
+      when :dfs, 'dfs' then Java::CascadingTap::Dfs
+      when :lfs, 'lfs' then Java::CascadingTap::Lfs
+      else raise "Unrecognized kind of tap '#{fs}'"
+    end
+    parameters = [scheme, path, sink_mode]
+    klass.new(*parameters)
   end
-
 end

@@ -16,13 +16,13 @@ flow = Cascading::Flow.new("copy_to_mysql") do
 
     #debug :print_fields=>true
 
-    restrict_to "name", "score1", "score2"
+    project "name", "score1", "score2"
    
     assert Java::CascadingOperationAssertion::AssertSizeEquals.new(3)
    
     #debug :print_fields=>true
    
-    restrict_to "name", "score2"
+    project "name", "score2"
  
     assert Java::CascadingOperationAssertion::AssertSizeEquals.new(2)
  

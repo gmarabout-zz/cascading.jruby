@@ -26,7 +26,7 @@ flow = Cascading::Flow.new("Join sample") do
   end
   
   assembly "join" do
-    join "extract1", "extract2", "extract3", :group_fields => ["id"], :declared_fields => ["id", "name", "id2", "age", "id3", "city"]
+    join "extract1", "extract2", "extract3", :on => ["id"], :declared_fields => ["id", "name", "id2", "age", "id3", "city"]
     restrict_to "id", "name", "age", "city"
   end
 end 
