@@ -1,25 +1,18 @@
-#!/usr/bin/jruby
+#! /usr/bin/env jruby
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
-require "cascading"
+require 'cascading'
+require 'samples/cascading'
+
 input = 'output/fetched/to_be_copied.txt'
-dataUrl = "http://www.census.gov/genealogy/names/dist.all.last"
-unless File.exist? input
-  system "curl --create-dirs -o #{input} #{dataUrl}"
-end
+dataUrl = 'http://www.census.gov/genealogy/names/dist.all.last'
+system "curl --create-dirs -o #{input} #{dataUrl}" unless File.exists?(input)
 
-Cascading::Builder.assembly "copy" do
-  # Let's rename the column name
-  #rename "line", "value"
-  
-  # Keep only value containing an "R"
-  #each "value", :filter => Java::CascadingOperationExpression::ExpressionFilter.new ("value.indexOf(\"R\")==-1", Java::JavaLang::String.java_class)
-  
-end
-
-flow = Cascading::Builder.flow("copy") do
-  source tap(input)
-  sink tap('output/copied', :replace=>true)
-  assembly "copy"
-end
-
-flow.complete
+Cascading::Flow.new('copy') do
+  source 'copy', tap(input)
+  assembly 'copy' do
+    rename 'line' => 'value'
+    reject 'value:string.indexOf("R") == -1'
+  end
+  sink 'copy', tap('output/copied', :sink_mode => :replace)
+end.complete(sample_properties)
