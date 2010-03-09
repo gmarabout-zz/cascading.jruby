@@ -1,26 +1,20 @@
-#!/usr/bin/jruby
+#! /usr/bin/env jruby
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
-require "cascading"
+require 'cascading'
+require 'samples/cascading'
+
 input = 'samples/data/data2.txt'
 
-flow = Cascading::Flow.new("copy") do
-  source "copy", tap(input)
+Cascading::Flow.new('copy') do
+  source 'copy', tap(input)
 
-  sink "copy", tap('output/splitted', :replace=>true)
-  
-  assembly "copy" do
-
-      split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
-
-      group_by "score1"
-
+  assembly 'copy' do
+    split 'line', ['name', 'score1', 'score2', 'id'], :output => ['name', 'score1', 'score2', 'id']
+    group_by 'score1' do
       count
-
-      project "score1", "count"
+    end
   end
-end
 
-flow.complete
-
-
-
+  sink 'copy', tap('output/splitted', :sink_mode => :replace)
+end.complete(sample_properties)
