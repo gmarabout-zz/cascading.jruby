@@ -3,9 +3,7 @@
 # Copyright 2009, Grégoire Marabout. All Rights Reserved.
 #
 # This is free software. Please see the LICENSE and COPYING files for details.
-
 module Cascading
-
   # Creates a cascading.tuple.Fields instance from a string or an array of strings.
   def fields(fields) 
     if fields.nil?
