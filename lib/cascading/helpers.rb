@@ -104,17 +104,24 @@ module Cascading
       options = args.extract_options!
       args.each do |field|
         agg = self.send(function, field, options)
-        in_fields = function == :count_function ? last_grouping_fields : field
-        every(in_fields, :aggregator => agg, :output => all_fields)
+        every(field, :aggregator => agg, :output => all_fields)
       end
+      puts "WARNING: composite aggregator '#{function.gsub('_function', '')}' invoked on 0 fields; will be ignored" if args.empty?
     end
-    
-    def count(*args); composite_aggregator(args, :count_function); end
+
     def min(*args); composite_aggregator(args, :min_function); end
     def max(*args); composite_aggregator(args, :max_function); end
     def first(*args); composite_aggregator(args, :first_function); end
     def last(*args); composite_aggregator(args, :last_function); end
     def average(*args); composite_aggregator(args, :average_function); end
+
+    # Counts elements of a group.  First unnamed parameter is the name of the
+    # output count field (defaults to 'count' if it is not provided).
+    def count(*args)
+      options = args.extract_options!
+      name = args[0] || 'count'
+      every(last_grouping_fields, :aggregator => count_function(name, options), :output => all_fields)
+    end
 
     # Fields to be summed may either be provided as an array, in which case
     # they will be aggregated into the same field in the given order, or as a
