@@ -1,33 +1,25 @@
-require "cascading"
+#! /usr/bin/env jruby
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+
+# History: "project" (verb) used to be known as "restrict"
+
+require 'cascading'
+require 'samples/cascading'
 
 input = 'samples/data/data2.txt'
+output = 'output/restrict'
 
-output = "output/restrict"
+Cascading::Flow.new('project') do
+  source 'extract', tap(input)
 
-flow = Cascading::Flow.new("copy_to_mysql") do
-  source tap(input)
-  sink tap(output, :replace=>true)
-  
-  assembly "extract" do
-
-    split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
-
+  assembly 'extract' do
+    split 'line', ['name', 'score1', 'score2', 'id'], :output => ['name', 'score1', 'score2', 'id']
     assert Java::CascadingOperationAssertion::AssertSizeEquals.new(4)
-
-    #debug :print_fields=>true
-
-    project "name", "score1", "score2"
-   
+    project 'name', 'score1', 'score2'
     assert Java::CascadingOperationAssertion::AssertSizeEquals.new(3)
-   
-    #debug :print_fields=>true
-   
-    project "name", "score2"
- 
+    project 'name', 'score2'
     assert Java::CascadingOperationAssertion::AssertSizeEquals.new(2)
- 
-    #debug :print_fields=>true
   end
-end 
 
-flow.complete
+  sink 'extract', tap(output, :sink_mode => :replace)
+end.complete(sample_properties)
