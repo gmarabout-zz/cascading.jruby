@@ -1,3 +1,5 @@
+# TODO: update and fix this sample
+
 require "cascading"
 require "cascading-ext/jdbc"
 
