@@ -12,6 +12,17 @@ class TC_Assembly < Test::Unit::TestCase
 
   include Cascading::Operations
 
+  def mock_assembly(&block)
+    Cascading::Flow.new 'test' do
+      source 'test', tap('test/data/data1.txt')
+
+      $assembly = assembly 'test' do
+        instance_eval(&block)
+      end
+    end
+    $assembly
+  end
+
   def test_create_assembly_simple
     assembly = Cascading::Assembly.new("assembly1") do
     end
@@ -23,150 +34,162 @@ class TC_Assembly < Test::Unit::TestCase
   end
 
   def test_each_identity
-    assembly = Cascading::Assembly.new("assembly1") do
-      each "field1", :filter => identity
+    assembly = mock_assembly do
+      each 'offset', :filter => identity
     end
 
-    assert_not_nil Cascading::Assembly.get("assembly1")
-    assert_equal assembly, Cascading::Assembly.get("assembly1")
+    assert_not_nil Cascading::Assembly.get('test')
+    assert_equal assembly, Cascading::Assembly.get('test')
   end
 
-
   def test_create_each  
-    assembly = Cascading::Assembly.new("test") do
-      each(:filter => identity)
+    # You can't apply an Each to 0 fields
+    assert_raise CascadingException do
+      assembly = mock_assembly do
+        each(:filter => identity)
+      end
+      assert assembly.tail_pipe.is_a? Java::CascadingPipe::Each
     end
-    assert assembly.tail_pipe.is_a? Java::CascadingPipe::Each
 
-    assembly = Cascading::Assembly.new("test") do 
-      each("Field1", :output => "Field2", :filter => identity)
+    assembly = mock_assembly do
+      each('offset', :output => 'offset_copy',
+           :filter => Java::CascadingOperation::Identity.new(fields('offset_copy')))
     end
     pipe = assembly.tail_pipe
-
 
     assert pipe.is_a? Java::CascadingPipe::Each
 
-    assert_equal "Field1", pipe.getArgumentSelector().get(0)
-    assert_equal "Field2", pipe.getOutputSelector().get(0)
+    assert_equal 'offset', pipe.getArgumentSelector().get(0)
+    assert_equal 'offset_copy', pipe.getOutputSelector().get(0)
   end
 
+  # For now, replaced these tests with the trivial observation that you can't
+  # follow a Tap with an Every.  Eventually, should support testing within a
+  # group_by block.
   def test_create_every
-
-    assembly = Cascading::Assembly.new("test") do
-      every(:aggregator => count_function)
+    assert_raise CascadingException do
+      assembly = mock_assembly do
+        every(:aggregator => count_function)
+      end
+      pipe = assembly.tail_pipe
+      assert pipe.is_a? Java::CascadingPipe::Every
     end
-    pipe = assembly.tail_pipe
-    assert pipe.is_a? Java::CascadingPipe::Every
 
-    assembly = Cascading::Assembly.new("test") do 
-      every(:aggregator => count_function("field1", "field2"))
+    assert_raise CascadingException do
+      assembly = mock_assembly do
+        every(:aggregator => count_function("field1", "field2"))
+      end
+      assert assembly.tail_pipe.is_a? Java::CascadingPipe::Every
     end
-    assert assembly.tail_pipe.is_a? Java::CascadingPipe::Every
 
-    assembly = Cascading::Assembly.new("test") do
-      every("Field1", :aggregator => count_function)
+    assert_raise CascadingException do
+      assembly = mock_assembly do
+        every("Field1", :aggregator => count_function)
+      end
+      assert assembly.tail_pipe.is_a? Java::CascadingPipe::Every
+      assert_equal "Field1", assembly.tail_pipe.getArgumentSelector().get(0)
     end
-    assert assembly.tail_pipe.is_a? Java::CascadingPipe::Every
-    assert_equal "Field1", assembly.tail_pipe.getArgumentSelector().get(0)
 
-    assembly = Cascading::Assembly.new("test") do
-      every("Field1", :aggregator => count_function, :output=>"Field2")
+    assert_raise CascadingException do
+      assembly = mock_assembly do
+        every('line', :aggregator => count_function, :output=>'line_count')
+      end
+      assert assembly.tail_pipe.is_a? Java::CascadingPipe::Every
+      assert_equal 'line', assembly.tail_pipe.getArgumentSelector().get(0)
+      assert_equal 'line_count', assembly.tail_pipe.getOutputSelector().get(0)
     end
-    assert assembly.tail_pipe.is_a? Java::CascadingPipe::Every
-    assert_equal "Field1", assembly.tail_pipe.getArgumentSelector().get(0)
-    assert_equal "Field2", assembly.tail_pipe.getOutputSelector().get(0)
   end
 
   def test_create_group_by
-    assembly = Cascading::Assembly.new("test") do
-      group_by("field1")
+    assembly = mock_assembly do
+      group_by('line')
     end
 
     assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
-    assert_equal "field1", grouping_fields.get(0) 
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()['test']
+    assert_equal 'line', grouping_fields.get(0) 
 
-    assembly = Cascading::Assembly.new("test") do
-      group_by("field1")
+    assembly = mock_assembly do
+      group_by('line')
     end
 
     assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
-    assert_equal "field1", grouping_fields.get(0)
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()['test']
+    assert_equal 'line', grouping_fields.get(0)
   end
 
   def test_create_group_by_many_fields
-    assembly = Cascading::Assembly.new("test") do
-      group_by(["field1", "field2"])
+    assembly = mock_assembly do
+      group_by(['offset', 'line'])
     end
 
     assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
-    assert_equal "field1", grouping_fields.get(0)
-    assert_equal "field2", grouping_fields.get(1)
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()['test']
+    assert_equal 'offset', grouping_fields.get(0)
+    assert_equal 'line', grouping_fields.get(1)
   end
 
   def test_create_group_by_with_sort
-    assembly = Cascading::Assembly.new("test") do
-      group_by("field1", "field2", :sort_by => ["field2"])
+    assembly = mock_assembly do
+      group_by('offset', 'line', :sort_by => ['line'])
     end
 
     assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
-    sorting_fields = assembly.tail_pipe.getSortingSelectors()["test"]
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()['test']
+    sorting_fields = assembly.tail_pipe.getSortingSelectors()['test']
 
     assert_equal 2, grouping_fields.size
     assert_equal 1, sorting_fields.size
 
-    assert_equal "field1", grouping_fields.get(0)
-    assert_equal "field2", grouping_fields.get(1)
+    assert_equal 'offset', grouping_fields.get(0)
+    assert_equal 'line', grouping_fields.get(1)
     assert assembly.tail_pipe.isSorted()
     assert !assembly.tail_pipe.isSortReversed()
-    assert_equal "field2", sorting_fields.get(0)
+    assert_equal 'line', sorting_fields.get(0)
   end
 
   def test_create_group_by_with_sort_reverse
-    assembly = Cascading::Assembly.new("test") do
-      group_by("field1", "field2", :sort_by => ["field2"], :reverse => true)
+    assembly = mock_assembly do
+      group_by('offset', 'line', :sort_by => ['line'], :reverse => true)
     end
 
     assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
-    sorting_fields = assembly.tail_pipe.getSortingSelectors()["test"]
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()['test']
+    sorting_fields = assembly.tail_pipe.getSortingSelectors()['test']
 
     assert_equal 2, grouping_fields.size
     assert_equal 1, sorting_fields.size
 
-    assert_equal "field1", grouping_fields.get(0)
-    assert_equal "field2", grouping_fields.get(1)
+    assert_equal 'offset', grouping_fields.get(0)
+    assert_equal 'line', grouping_fields.get(1)
     assert assembly.tail_pipe.isSorted()
     assert assembly.tail_pipe.isSortReversed()
-    assert_equal "field2", sorting_fields.get(0)
+    assert_equal 'line', sorting_fields.get(0)
   end
 
   def test_create_group_by_reverse
-    assembly = Cascading::Assembly.new("test") do 
-      group_by("field1", "field2", :reverse => true)
+    assembly = mock_assembly do
+      group_by('offset', 'line', :reverse => true)
     end
 
     assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
-    grouping_fields = assembly.tail_pipe.getGroupingSelectors()["test"]
-    sorting_fields = assembly.tail_pipe.getSortingSelectors()["test"]
+    grouping_fields = assembly.tail_pipe.getGroupingSelectors()['test']
+    sorting_fields = assembly.tail_pipe.getSortingSelectors()['test']
 
     assert_equal 2, grouping_fields.size
     assert_equal 2, sorting_fields.size
 
-    assert_equal "field1", grouping_fields.get(0)
-    assert_equal "field2", grouping_fields.get(1)
+    assert_equal 'offset', grouping_fields.get(0)
+    assert_equal 'line', grouping_fields.get(1)
     assert assembly.tail_pipe.isSorted()
     assert assembly.tail_pipe.isSortReversed()
-    assert_equal "field1", sorting_fields.get(0)
-    assert_equal "field2", sorting_fields.get(1)
+    assert_equal 'offset', sorting_fields.get(0)
+    assert_equal 'line', sorting_fields.get(1)
   end
 
   def test_branch_unique
-    assembly = Assembly.new("test") do
-      branch "branch1"
+    assembly = mock_assembly do
+      branch 'branch1'
     end
 
     assert_equal 1, assembly.children.size
@@ -174,12 +197,12 @@ class TC_Assembly < Test::Unit::TestCase
   end
 
   def test_branch_empty
-    assembly = Cascading::Assembly.new("test") do
-      branch "branch1" do
+    assembly = mock_assembly do
+      branch 'branch1' do
       end
 
-      branch "branch2" do
-        branch "branch3" 
+      branch 'branch2' do
+        branch 'branch3'
       end
     end
 
@@ -189,10 +212,10 @@ class TC_Assembly < Test::Unit::TestCase
   end
 
   def test_branch_single
-    assembly = Cascading::Assembly.new("test") do      
-      branch "branch1" do
-        branch "branch2" do
-          each "line", :function => identity
+    assembly = mock_assembly do
+      branch 'branch1' do
+        branch 'branch2' do
+          each 'line', :function => identity
         end
       end
     end
@@ -206,17 +229,13 @@ class TC_Assembly < Test::Unit::TestCase
   # an Each with an Every.
   def test_full_assembly
     assert_raise CascadingException do
-      Cascading::Flow.new 'test' do
-        source 'test', tap('test/data/data1.txt')
-
-        $assembly = assembly 'test' do
-          each('offset', :output => 'offset_copy',
-              :filter => Java::CascadingOperation::Identity.new(fields('offset_copy')))
-          every(:aggregator => count_function)
-        end
+      assembly = mock_assembly do
+        each('offset', :output => 'offset_copy',
+             :filter => Java::CascadingOperation::Identity.new(fields('offset_copy')))
+        every(:aggregator => count_function)
       end
 
-      pipe = $assembly.tail_pipe
+      pipe = assembly.tail_pipe
 
       assert pipe.is_a? Java::CascadingPipe::Every
     end
@@ -303,9 +322,9 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
        source "data1", tap("test/data/data1.txt")
        source "data2", tap("test/data/data2.txt")
-       sink "joined", tap('output/joined', :replace=>true)
+       sink "joined", tap('output/joined', :sink_mode => :replace)
 
-       assembly1 = assembly "data1" do
+       assembly "data1" do
 
          split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
 
@@ -313,7 +332,7 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
        end
 
-       assembly2 = assembly "data2" do
+       assembly "data2" do
 
          split "line", :pattern => /[.,]*\s+/, :into=>["name",  "code", "town"], :output => ["name",  "code", "town"]
 
@@ -321,9 +340,13 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
        end
 
        assembly "joined" do
-         join :on => {assembly1=>["name", "id"], assembly2=>["name", "code"]}, :declared_fields => ["name", "score1", "score2", "id", "name2", "code", "town"]
+         join :on => {"data1"=>["name", "id"], "data2"=>["name", "code"]}, :declared_fields => ["name", "score1", "score2", "id", "name2", "code", "town"]
        end
      end
-    flow.complete
+    begin
+      flow.complete
+    rescue NativeException => e
+      throw CascadingException.new(e, 'Flow failed to complete')
+    end
    end
 end
