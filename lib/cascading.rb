@@ -69,9 +69,9 @@ module Cascading
 
 end  # module Cascading
 
-Cascading.require_all_libs_relative_to(__FILE__)
 Cascading.require_all_jars(Cascading::HADOOP_HOME) if Cascading::HADOOP_HOME
 Cascading.require_all_jars(Cascading::CASCADING_HOME) if Cascading::CASCADING_HOME
+Cascading.require_all_libs_relative_to(__FILE__)
 
 # include module to make them available at top package
 include Cascading
