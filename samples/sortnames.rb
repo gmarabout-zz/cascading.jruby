@@ -1,25 +1,20 @@
-#! /usr/bin/jruby      
+#! /usr/bin/env jruby
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+
+# Question: does this script actually sort the names?
 
 require 'cascading'
+require 'samples/cascading'
 
-source1 = tap("http://www.census.gov/genealogy/names/dist.all.last", :scheme => text_line_scheme)
-sink1 = tap('output/sorted', :scheme => text_line_scheme, :replace=>true)
+Cascading::Flow.new('fetch') do
+  # You don't have to curl and cache inputs: tap can fetch via HTTP
+  source 'fetch', tap('http://www.census.gov/genealogy/names/dist.all.last')
 
-expr = "val2 < 40 ? val1 : val2"
-
-flow1 = Cascading::Flow.new("fetch") do
-  source "fetch", source1
-
-  sink "fetch", sink1
-
-  assembly "fetch" do
-    each "line", :filter=>regex_splitter(["name", "val1", "val2", "id"], :pattern => /[.,]*\s+/), :output=>["id", "name", "val1", "val2"] 
-
-    each ["val1", "val2"], 
-      :function => expression_function("val3", :expression => expr, :parameters => {"val1"=>java.lang.Double, "val2"=>java.lang.Double}), 
-      :output => ["name", "val3", "id"]      
+  assembly 'fetch' do
+    split 'line', ['name', 'val1', 'val2', 'id']
+    insert 'val3' => expr('val2:double < 40.0 ? val1:double : val2:double')
+    project 'name', 'val3', 'id'
   end
-end
 
-flow1.complete
-
+  sink 'fetch', tap('output/sorted', :sink_mode => :replace)
+end.complete(sample_properties)
