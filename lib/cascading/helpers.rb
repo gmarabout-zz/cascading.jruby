@@ -97,16 +97,33 @@ module Cascading
 
     # Builds a series of every pipes for aggregation.
     # 
-    # Args is the list of fields to aggregate and options. Options include:
+    # Args can either be a list of fields to aggregate and an options hash or
+    # a hash that maps input field name to output field name (similar to
+    # insert) and an options hash.
+    #
+    # Options include:
     #   * <tt>:sql</tt> a boolean indicating whether the operation should act like the SQL equivalent
-    # Function is a symbol that is the method to call to construct the Cascading Aggregator.
+    #
+    # <tt>function</tt> is a symbol that is the method to call to construct the Cascading Aggregator.
     def composite_aggregator(args, function)
-      options = args.extract_options!
-      args.each do |field|
-        agg = self.send(function, field, options)
-        every(field, :aggregator => agg, :output => all_fields)
+      if !args.empty? && args.first.kind_of?(Hash)
+        # Map syntax
+        field_map = args.shift
+        options = args.extract_options!
+        field_map.each do |in_field, out_field|
+          agg = self.send(function, out_field, options)
+          every(in_field, :aggregator => agg, :output => all_fields)
+        end
+        puts "WARNING: composite aggregator '#{function.to_s.gsub('_function', '')}' invoked on 0 fields; will be ignored" if field_map.empty?
+      else
+        # Reuse field names syntax
+        options = args.extract_options!
+        args.each do |field|
+          agg = self.send(function, field, options)
+          every(field, :aggregator => agg, :output => all_fields)
+        end
+        puts "WARNING: composite aggregator '#{function.to_s.gsub('_function', '')}' invoked on 0 fields; will be ignored" if args.empty?
       end
-      puts "WARNING: composite aggregator '#{function.gsub('_function', '')}' invoked on 0 fields; will be ignored" if args.empty?
     end
 
     def min(*args); composite_aggregator(args, :min_function); end
