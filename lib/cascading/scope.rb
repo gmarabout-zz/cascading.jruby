@@ -64,9 +64,14 @@ module Cascading
     end
 
     def to_s
+      kind = 'Unknown'
+      kind = 'Tap'   if @scope.tap?
+      kind = 'Group' if @scope.group?
+      kind = 'Each'  if @scope.each?
+      kind = 'Every' if @scope.every?
       <<-END
 Scope name: #{@scope.name}
-  [Tap, Group, Each, Every]: #{[@scope.tap?, @scope.group?, @scope.each?, @scope.every?].inspect}
+  Kind: #{kind}
   Argument selector: #{@scope.argument_selector}
   Declared fields: #{@scope.declared_fields}
   Grouping selectors: #{@scope.grouping_selectors}
