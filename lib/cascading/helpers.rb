@@ -107,23 +107,17 @@ module Cascading
     # <tt>function</tt> is a symbol that is the method to call to construct the Cascading Aggregator.
     def composite_aggregator(args, function)
       if !args.empty? && args.first.kind_of?(Hash)
-        # Map syntax
-        field_map = args.shift
+        field_map = args.shift.sort
         options = args.extract_options!
-        field_map.each do |in_field, out_field|
-          agg = self.send(function, out_field, options)
-          every(in_field, :aggregator => agg, :output => all_fields)
-        end
-        puts "WARNING: composite aggregator '#{function.to_s.gsub('_function', '')}' invoked on 0 fields; will be ignored" if field_map.empty?
       else
-        # Reuse field names syntax
         options = args.extract_options!
-        args.each do |field|
-          agg = self.send(function, field, options)
-          every(field, :aggregator => agg, :output => all_fields)
-        end
-        puts "WARNING: composite aggregator '#{function.to_s.gsub('_function', '')}' invoked on 0 fields; will be ignored" if args.empty?
+        field_map = args.zip(args)
       end
+      field_map.each do |in_field, out_field|
+        agg = self.send(function, out_field, options)
+        every(in_field, :aggregator => agg, :output => all_fields)
+      end
+      puts "WARNING: composite aggregator '#{function.to_s.gsub('_function', '')}' invoked on 0 fields; will be ignored" if field_map.empty?
     end
 
     def min(*args); composite_aggregator(args, :min_function); end
