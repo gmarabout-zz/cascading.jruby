@@ -18,8 +18,9 @@ module Cascading
       pipes, incoming_scopes = [], []
       args.each do |assembly|
         # a string instead of an Assembly variable could be used :-)
+        assembly_name = assembly
         assembly = Assembly.get(assembly)
-        raise "Could not find assembly #{assembly}" unless assembly
+        raise "Could not find assembly #{assembly_name}" unless assembly
         pipes << assembly.tail_pipe
         incoming_scopes << node.outgoing_scopes[assembly.name]
       end
