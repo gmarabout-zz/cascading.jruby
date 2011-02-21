@@ -22,6 +22,9 @@ class CascadingException < StandardError
   end
 
   def trace_causes(ne, depth)
-    "Cause #{depth}: #{ne}\n#{trace_causes(ne.cause, depth + 1)}" if ne
+    return unless ne
+    trace = "Cause #{depth}: #{ne}\n"
+    trace += ne.stack_trace.map { |e| "  at #{e.class_name}.#{e.method_name}(#{e.file_name}:#{e.line_number})" }.join("\n") + "\n" if ne.respond_to?(:stack_trace)
+    trace += "#{trace_causes(ne.cause, depth + 1)}"
   end
 end
