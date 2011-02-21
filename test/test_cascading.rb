@@ -3,14 +3,14 @@ require 'cascading'
 
 class TC_Cascading < Test::Unit::TestCase
   def test_fields_field
-    result = Cascading.fields(Cascading.all_fields)
-    assert result == Cascading.all_fields
+    result = fields(all_fields)
+    assert result == all_fields
   end
 
   def test_fields_single
     declared = "Field1"
 
-    result = Cascading.fields( declared )
+    result = fields(declared)
 
     assert result.size == 1
 
@@ -20,7 +20,7 @@ class TC_Cascading < Test::Unit::TestCase
   def test_fields_multiple
     declared = ["Field1", "Field2", "Field3"]
 
-    result = Cascading.fields( declared )
+    result = fields(declared)
 
     assert result.size == 3
 

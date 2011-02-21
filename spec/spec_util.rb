@@ -32,7 +32,7 @@ module Cascading
 end
 
 def test_flow(&block)
-  cascade = Cascading::Cascade.new('test_app') do
+  cascade = Cascade.new('test_app') do
     flow 'test' do
       instance_eval(&block)
     end
@@ -41,7 +41,7 @@ def test_flow(&block)
 end
 
 def fail_flow(&block)
-  cascade = Cascading::Cascade.new('test_app') do
+  cascade = Cascade.new('test_app') do
     flow 'test' do
       instance_eval(&block)
     end
@@ -152,7 +152,7 @@ end
 def verify_assembly_output(assembly_name, params, &block)
   `rm -rf spec_output`
 
-  Cascading::Cascade.new("foo") do
+  Cascade.new("foo") do
     flow("bar") do
       source assembly_name, tap(params[:source], params.slice(:scheme)) 
       assembly(assembly_name)

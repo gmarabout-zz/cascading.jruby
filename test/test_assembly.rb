@@ -7,11 +7,10 @@ def compare_with_references(test_name)
 end
 
 class TC_Assembly < Test::Unit::TestCase
-
-  include Cascading::Operations
+  include Operations
 
   def mock_assembly(&block)
-    Cascading::Flow.new 'test' do
+    Flow.new('test', nil) do
       source 'test', tap('test/data/data1.txt')
 
       $assembly = assembly 'test' do
@@ -22,11 +21,12 @@ class TC_Assembly < Test::Unit::TestCase
   end
 
   def test_create_assembly_simple
-    assembly = Cascading::Assembly.new("assembly1") do
+    assembly = Assembly.new("assembly1", nil) do
+      # Empty assembly
     end
 
-    assert_not_nil Cascading::Assembly.get("assembly1")
-    assert_equal assembly, Cascading::Assembly.get("assembly1")
+    assert_not_nil Assembly.get("assembly1")
+    assert_equal assembly, Assembly.get("assembly1")
     pipe = assembly.tail_pipe
     assert pipe.is_a? Java::CascadingPipe::Pipe
   end
@@ -36,11 +36,11 @@ class TC_Assembly < Test::Unit::TestCase
       each 'offset', :filter => identity
     end
 
-    assert_not_nil Cascading::Assembly.get('test')
-    assert_equal assembly, Cascading::Assembly.get('test')
+    assert_not_nil Assembly.get('test')
+    assert_equal assembly, Assembly.get('test')
   end
 
-  def test_create_each  
+  def test_create_each
     # You can't apply an Each to 0 fields
     assert_raise CascadingException do
       assembly = mock_assembly do
@@ -105,7 +105,7 @@ class TC_Assembly < Test::Unit::TestCase
 
     assert assembly.tail_pipe.is_a? Java::CascadingPipe::GroupBy
     grouping_fields = assembly.tail_pipe.getGroupingSelectors()['test']
-    assert_equal 'line', grouping_fields.get(0) 
+    assert_equal 'line', grouping_fields.get(0)
 
     assembly = mock_assembly do
       group_by('line')
@@ -245,7 +245,7 @@ end
 class TC_AssemblyScenarii < Test::Unit::TestCase
 
   def test_splitter
-    flow = Cascading::Flow.new("splitter") do
+    flow = Flow.new("splitter", nil) do
 
       source "copy", tap("test/data/data1.txt")
       sink "copy", tap('output/splitter', :sink_mode => :replace)
@@ -276,7 +276,7 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
 
   def test_join1
-    flow = Cascading::Flow.new("splitter") do
+    flow = Flow.new("splitter", nil) do
 
       source "data1", tap("test/data/data1.txt")
       source "data2", tap("test/data/data2.txt")
@@ -285,7 +285,7 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
       assembly1 = assembly "data1" do
 
         split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
-        
+
         assert_size_equals 4
 
         assert_not_null
@@ -305,18 +305,18 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
 
       assembly "joined" do
         join assembly1, assembly2, :on => ["name", "id"], :declared_fields => ["name", "score1", "score2", "id", "name2", "id2", "town"]
-      
+
         assert_size_equals 7
 
         assert_not_null
-        
+
       end
     end
     flow.complete
   end
-  
+
   def test_join2
-     flow = Cascading::Flow.new("splitter") do
+     flow = Flow.new("splitter", nil) do
 
        source "data1", tap("test/data/data1.txt")
        source "data2", tap("test/data/data2.txt")

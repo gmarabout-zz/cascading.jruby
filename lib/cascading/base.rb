@@ -1,71 +1,32 @@
-# base.rb
-#
 # Copyright 2009, Grégoire Marabout. All Rights Reserved.
 #
 # This is free software. Please see the LICENSE and COPYING files for details.
 
-
 module Cascading
-
-  class NodeFactory
-    # Nothing here.
-  end
-
-
   class Node
-    attr_accessor :name, :parent, :children    
+    attr_accessor :name, :parent, :children
 
-    # Creates a registry to the sub class:
+    # Makes child Registerable
     def self.inherited(child)
-      child.send(:extend, Cascading::Registerable) 
+      child.send(:extend, Registerable)
     end
 
-    def initialize(name, parent=nil, &block)
+    def initialize(name, parent, &block)
       @name = name
       @parent = parent
       @children = []
       self.class.add(name, self)
-      if block
-        create_sub_nodes(&block)
-      end
+      instance_eval(&block) if block
     end
 
-    def factory
-      @factory ||= make_factory
-      @factory
+    def add_child(node)
+      @children << node
+      node
     end
-
-    def make_factory
-      factory_class = "Cascading::#{self.class.name}Factory".split("::").inject(Object) { |par, const| par.const_get(const) }
-      factory_class.new
-    end
-
-    def method_missing(name, *args, &block)
-      if factory.respond_to? name
-        #puts "Creating node: #{name}"
-        child = factory.send(name, self, *args, &block)
-        # Factory may return nil! 
-        if child.is_a? Cascading::Node
-          @children << child
-        end
-        return child
-      else
-        super(name, *args, &block)
-      end
-    end
-
-    def create_sub_nodes(&block)
-      if block
-        instance_eval(&block)
-      end
-    end
-
   end
 
-
-  # A module to add auto-registration capability.
+  # A module to add auto-registration capability
   module Registerable
-
     def all
       @registered.nil? ? [] : @registered.values
     end
@@ -81,12 +42,12 @@ module Cascading
 
     def reset
       @registered.clear if @registered
-    end 
+    end
 
     def add(name, instance)
       @registered ||= {}
       @registered[name] = instance
-    end  
+    end
 
     private
 
@@ -95,6 +56,4 @@ module Cascading
       @registered
     end
   end
-
-
 end

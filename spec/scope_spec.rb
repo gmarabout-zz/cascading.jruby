@@ -28,7 +28,7 @@ describe Cascading::Scope do
       # Pass that uses our grouping fields instead of all_fields
       operation = Java::CascadingOperation::Identity.new 
       make_each(# FIXME: names of grouping fields are not what we'd expect!
-                Java::CascadingPipe::Each, tail_pipe, Cascading.fields([0, 'x_sum']), operation)
+                Java::CascadingPipe::Each, tail_pipe, fields([0, 'x_sum']), operation)
 
       check_scope :values_fields => [0, 'x_sum']
     end

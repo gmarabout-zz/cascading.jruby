@@ -1,15 +1,14 @@
-# cascading.rb
-#
 # Copyright 2009, Grégoire Marabout. All Rights Reserved.
 #
 # This is free software. Please see the LICENSE and COPYING files for details.
+
 module Cascading
   def cascade(name, &block)
     Cascade.new(name, &block)
   end
 
   # Creates a cascading.tuple.Fields instance from a string or an array of strings.
-  def fields(fields) 
+  def fields(fields)
     if fields.nil?
       return nil
     elsif fields.is_a? Java::CascadingTuple::Fields
@@ -59,13 +58,13 @@ module Cascading
   end
 
   def results_fields
-    Java::CascadingTuple::Fields::RESULTS 
+    Java::CascadingTuple::Fields::RESULTS
   end
 
   # Creates a c.s.TextLine scheme instance from the specified fields.
   def text_line_scheme(*fields)
     unless fields.empty?
-      fields = fields(fields) 
+      fields = fields(fields)
       return Java::CascadingScheme::TextLine.new(fields)
     else
       return Java::CascadingScheme::TextLine.new
@@ -75,7 +74,7 @@ module Cascading
   # Creates a c.s.SequenceFile scheme instance from the specified fields.
   def sequence_file_scheme(*fields)
     unless fields.empty?
-      fields = fields(fields) 
+      fields = fields(fields)
       return Java::CascadingScheme::SequenceFile.new(fields)
     else
       return Java::CascadingScheme::SequenceFile.new(all_fields)
@@ -87,7 +86,7 @@ module Cascading
   end
 
   # Generic method for creating taps.
-  # It expects a ":kind" argument pointing to the type of tap to create. 
+  # It expects a ":kind" argument pointing to the type of tap to create.
   def tap(*args)
     opts = args.extract_options!
     path = args.empty? ? opts[:path] : args[0]

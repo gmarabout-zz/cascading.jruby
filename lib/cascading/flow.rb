@@ -1,31 +1,20 @@
-# flow.rb
-#
 # Copyright 2009, Grégoire Marabout. All Rights Reserved.
 #
 # This is free software. Please see the LICENSE and COPYING files for details.
 
-require "cascading/assembly"
+require 'cascading/assembly'
 
 module Cascading
-  class FlowFactory
-    def assembly(node, *args, &block)
-      name = args[0]
-      if block
-        Cascading::Assembly.new(name, nil, node.outgoing_scopes, &block)
-      else
-        Cascading::Assembly.get(name)
-      end
-    end
-  end
-
-
   class Flow < Cascading::Node
     attr_accessor :properties, :sources, :sinks, :outgoing_scopes, :listeners
 
-    def initialize(name, parent=nil, &block)
-      @properties, @sources, @sinks, @outgoing_scopes = {}, {}, {}, {}
-      @listeners = []
+    def initialize(name, parent, &block)
+      @properties, @sources, @sinks, @outgoing_scopes, @listeners = {}, {}, {}, {}, []
       super(name, parent, &block)
+    end
+
+    def assembly(name, &block)
+      add_child(block ? Assembly.new(name, self, @outgoing_scopes, &block) : Assembly.get(name, self))
     end
 
     # Create a new sink for this flow, with the specified name.

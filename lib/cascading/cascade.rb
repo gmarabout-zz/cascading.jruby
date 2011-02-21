@@ -1,5 +1,3 @@
-# cascade.rb
-#
 # Copyright 2009, Grégoire Marabout. All Rights Reserved.
 #
 # This is free software. Please see the LICENSE and COPYING files for details.
@@ -8,20 +6,15 @@ require 'cascading/base'
 require 'yaml'
 
 module Cascading
-  class CascadeFactory
-
-    def flow(node, *args, &block)
-      name = args[0]
-      if block.nil?
-        return Cascading::Flow.get(name)
-      else
-        return Cascading::Flow.new(name, &block)
-      end
+  class Cascade < Cascading::Node
+    def initialize(name, &block)
+      super(name, nil, &block) # A Cascade cannot have a parent
     end
 
-  end
+    def flow(name, &block)
+      add_child(block ? Flow.new(name, self, &block) : Flow.get(name, self))
+    end
 
-  class Cascade < Cascading::Node
     def draw(dir, properties = nil)
       @children.each do |flow|
         flow.connect(properties).writeDOT("#{dir}/#{flow.name}.dot")
