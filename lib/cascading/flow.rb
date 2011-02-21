@@ -92,6 +92,40 @@ module Cascading
         end
     end
 
+    def set_spill_threshold(threshold)
+      properties['cascading.cogroup.spill.threshold'] = threshold.to_s
+    end
+
+    def add_file_to_distributed_cache(file)
+      add_to_distributed_cache(file, "mapred.cache.files")
+    end
+
+    def add_archive_to_distributed_cache(file)
+      add_to_distributed_cache(file, "mapred.cache.archives")
+    end
+
+    def emr_local_path_for_distributed_cache_file(file)
+      # NOTE this needs to be *appended* to the property mapred.local.dir
+      if file =~ /^s3n?:\/\//
+        # EMR
+        "/taskTracker/archive/#{file.gsub(/^s3n?:\/\//, "")}"
+      else
+        # Local
+        file
+      end
+    end
+
+    def add_to_distributed_cache(file, property)
+      v = properties[property]
+
+      if v
+        properties[property] = [v.split(/,/), file].flatten.join(",")
+      else
+        properties[property] = file
+      end
+    end
+
+
     def connect(properties = nil)
       properties ||= java.util.HashMap.new(@properties)
       parameters = build_connect_parameter()
