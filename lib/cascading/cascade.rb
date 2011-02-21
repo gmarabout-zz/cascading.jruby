@@ -4,7 +4,8 @@
 #
 # This is free software. Please see the LICENSE and COPYING files for details.
 
-require "cascading/base"
+require 'cascading/base'
+require 'yaml'
 
 module Cascading
   class CascadeFactory
