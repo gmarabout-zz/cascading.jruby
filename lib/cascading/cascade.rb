@@ -50,7 +50,9 @@ module Cascading
 
     def make_flows(flows, properties)
       flow_instances = flows.map do |flow|
-        flow.connect(properties)
+        cascading_flow = flow.connect(properties)
+        flow.listeners.each { |l| cascading_flow.addListener(l) }
+        cascading_flow
       end
       flow_instances.to_java(Java::CascadingFlow::Flow)
     end

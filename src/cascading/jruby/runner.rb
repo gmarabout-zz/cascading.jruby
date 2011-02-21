@@ -1,3 +1,3 @@
-Cascading::Flow.all.each do |flow|
-  flow.complete
+Cascading::Cascade.all.each do |cascade|
+  cascade.complete
 end

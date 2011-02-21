@@ -4,6 +4,7 @@ import org.jruby.Ruby;
 import org.jruby.RubyInstanceConfig;
 
 public class Main {
+	private final static String JRUBY_HOME = "/opt/jruby";
 
 	/**
 	 * Starts an Hadoop job by reading the specified JRuby script. The syntax is
@@ -21,6 +22,7 @@ public class Main {
 		String[] newArgs = new String[args.length - 1];
 		System.arraycopy(args, 1, newArgs, 0, args.length - 1);
 		RubyInstanceConfig config = new RubyInstanceConfig();
+		config.setJRubyHome(JRUBY_HOME); // mwalker
 		config.processArguments(newArgs);
 
 		System.out.println("Arguments: ");
@@ -30,7 +32,6 @@ public class Main {
 		Ruby runtime = Ruby.newInstance(config);
 
 		runtime.executeScript("require '" + name + "'", name);
-        // gfodor
-		runtime.executeScript("require 'cascading/jruby/runner'", null);
+		runtime.executeScript("require 'cascading/jruby/runner'", null); // gfodor
 	}
 }
