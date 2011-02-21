@@ -179,10 +179,10 @@ module Cascading
       fields = options[:into] || args[1]
       pattern = options[:pattern] || /[.,]*\s+/
       output = options[:output] || all_fields
-      each(args[0], :filter => regex_splitter(fields, :pattern => pattern), :output=>output)
+      each(args[0], :function => regex_splitter(fields, :pattern => pattern), :output=>output)
     end
 
-    # Builds a pipe that splits a field into new rows, using a specified # regular expression.
+    # Builds a pipe that splits a field into new rows, using a specified regular expression.
     #
     # The first unnamed argument is the field to be split.
     # The second unnamed argument is the field receiving the result of the split.
@@ -195,7 +195,23 @@ module Cascading
       fields = options[:into] || args[1]
       pattern = options[:pattern] || /[.,]*\s+/
       output = options[:output] || all_fields
-      each(args[0], :filter => regex_split_generator(fields, :pattern => pattern), :output=>output)
+      each(args[0], :function => regex_split_generator(fields, :pattern => pattern), :output=>output)
+    end
+
+    # Builds a pipe that emits a new row for each regex group matched in a field, using a specified regular expression.
+    #
+    # The first unnamed argument is the field to be matched against.
+    # The second unnamed argument is the field receiving the result of the match.
+    #
+    # The named options are:
+    # * <tt>:pattern</tt> a string or regex. Specifies the regular expression used for matching the argument fields.
+    # * <tt>:output</tt> a string or array of strings. Specifies the outgoing fields (all fields will be output by default)
+    def match_rows(*args)
+      options = args.extract_options!
+      fields = options[:into] || args[1]
+      pattern = options[:pattern] || /[\w]+/
+      output = options[:output] || all_fields
+      each(args[0], :function => regex_generator(fields, :pattern => pattern), :output=>output)
     end
 
     # Builds a pipe that parses the specified field as a date using hte provided format string.

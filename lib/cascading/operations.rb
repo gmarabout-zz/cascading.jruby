@@ -80,6 +80,15 @@ module Cascading
       Java::CascadingOperationRegex::RegexSplitGenerator.new(*parameters)
     end
 
+    def regex_generator(*args)
+      options = args.extract_options!
+
+      fields = Cascading.fields(args)
+      pattern = options[:pattern].to_s
+      parameters = [fields, pattern].compact
+      Java::CascadingOperationRegex::RegexGenerator.new(*parameters)
+    end
+
     def expression_function(*args)
       options = args.extract_options!
 
