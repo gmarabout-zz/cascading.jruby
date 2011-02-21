@@ -1,4 +1,4 @@
-# helpers.rb 
+# helpers.rb
 #
 # Copyright 2009, Grégoire Marabout. All Rights Reserved.
 #
@@ -10,17 +10,17 @@ module Cascading
                       :bool => java.lang.Boolean.java_class, :double => java.lang.Double.java_class,
                       :float => java.lang.Float.java_class, :string => java.lang.String.java_class }
   end
-  
+
   # Module PipeHelpers.
   # This module is mixed-in the class Cascading::Assembly to provide shorthands of current pipe configurations.
-  # 
+  #
   # Author:: Grégoire Marabout <gmarabout@gmail.com>
   module PipeHelpers
 
     class ExprStub
       attr_accessor :expression, :types
 
-      def initialize(st) 
+      def initialize(st)
         @expression = st.dup
         @types = {}
 
@@ -54,15 +54,15 @@ module Cascading
     def expr(s)
       ExprStub.new(s)
     end
-    
-    # Builds a debugging pipe. 
-    # 
+
+    # Builds a debugging pipe.
+    #
     # Without arguments, it generate a simple debug pipe, that prints all tuple to the standard
-    # output. 
+    # output.
     #
     # The other named options are:
-    # * <tt>:print_fields</tt> a boolean. If is set to true, then it prints every 10 tuples. 
-    # 
+    # * <tt>:print_fields</tt> a boolean. If is set to true, then it prints every 10 tuples.
+    #
     def debug(*args)
       options = args.extract_options!
       print_fields = options[:print_fields] || true
@@ -72,20 +72,20 @@ module Cascading
       debug.print_fields_every = options[:fields_interval] || 10
       each(all_fields, :filter => debug)
     end
-    
+
     # Builds a pipe that assert the size of the tuple is the size specified in parameter.
     #
     # The method accept an unique uname argument : a number indicating the size expected.
     def assert_size_equals(*args)
       options = args.extract_options!
-      assertion = Java::CascadingOperationAssertion::AssertSizeEquals.new(args[0])      
+      assertion = Java::CascadingOperationAssertion::AssertSizeEquals.new(args[0])
       assert(assertion, options)
     end
 
     # Builds a pipe that assert the none of the fields in the tuple are null.
     def assert_not_null(*args)
       options = args.extract_options!
-      assertion = Java::CascadingOperationAssertion::AssertNotNull.new()      
+      assertion = Java::CascadingOperationAssertion::AssertNotNull.new
       assert(assertion, options)
     end
 
@@ -96,7 +96,7 @@ module Cascading
     end
 
     # Builds a series of every pipes for aggregation.
-    # 
+    #
     # Args can either be a list of fields to aggregate and an options hash or
     # a hash that maps input field name to output field name (similar to
     # insert) and an options hash.
@@ -156,7 +156,7 @@ module Cascading
     # fields are used.
     #
     # The named options are:
-    # * <tt>:pattern</tt> a string or regex. Specifies the regular expression used for parsing the argument fields. 
+    # * <tt>:pattern</tt> a string or regex. Specifies the regular expression used for parsing the argument fields.
     # * <tt>:output</tt> a string or array of strings. Specifies the outgoing fields (all fields will be output by default)
     def parse(*args)
         options = args.extract_options!
@@ -166,13 +166,13 @@ module Cascading
         each(fields, :filter => regex_parser(pattern, options), :output => output)
     end
 
-    # Builds a pipe that splits a field into other fields, using a specified regular expression. 
+    # Builds a pipe that splits a field into other fields, using a specified regular expression.
     #
-    # The first unamed argument is the field to be splitted. 
-    # The second unamed argument is an array of strings indicating the fields receiving the result of the split. 
+    # The first unnamed argument is the field to be split.
+    # The second unnamed argument is an array of strings indicating the fields receiving the result of the split.
     #
     # The named options are:
-    # * <tt>:pattern</tt> a string or regex. Specifies the regular expression used for splitting the argument fields. 
+    # * <tt>:pattern</tt> a string or regex. Specifies the regular expression used for splitting the argument fields.
     # * <tt>:output</tt> a string or array of strings. Specifies the outgoing fields (all fields will be output by default)
     def split(*args)
       options = args.extract_options!
@@ -181,7 +181,23 @@ module Cascading
       output = options[:output] || all_fields
       each(args[0], :filter => regex_splitter(fields, :pattern => pattern), :output=>output)
     end
-    
+
+    # Builds a pipe that splits a field into new rows, using a specified # regular expression.
+    #
+    # The first unnamed argument is the field to be split.
+    # The second unnamed argument is the field receiving the result of the split.
+    #
+    # The named options are:
+    # * <tt>:pattern</tt> a string or regex. Specifies the regular expression used for splitting the argument fields.
+    # * <tt>:output</tt> a string or array of strings. Specifies the outgoing fields (all fields will be output by default)
+    def split_rows(*args)
+      options = args.extract_options!
+      fields = options[:into] || args[1]
+      pattern = options[:pattern] || /[.,]*\s+/
+      output = options[:output] || all_fields
+      each(args[0], :filter => regex_split_generator(fields, :pattern => pattern), :output=>output)
+    end
+
     # Builds a pipe that parses the specified field as a date using hte provided format string.
     # The unamed argument specifies the field to format.
     #
@@ -221,7 +237,7 @@ module Cascading
     # Builds a pipe that perform a query/replace based on a regular expression.
     #
     # The first unamed argument specifies the input field.
-    # 
+    #
     # The named options are:
     # * <tt>:pattern</tt> a string or regex. Specifies the pattern to look for in the input field. This non-optional argument
     # can also be specified as a second _unamed_ argument.
@@ -242,10 +258,10 @@ module Cascading
     #
     # The method takes a hash as parameter. This hash contains as keys the names of the fields to insert
     # and as values, the values they must contain. For example:
-    #     
+    #
     #       insert {"who" => "Grégoire", "when" => Time.now.strftime("%Y-%m-%d") }
     #
-    # will insert two new fields: a field _who_ containing the string "Grégoire", and a field _when_ containing 
+    # will insert two new fields: a field _who_ containing the string "Grégoire", and a field _when_ containing
     # the formatted current date.
     # The methods outputs all fields.
     # The named options are:
@@ -270,9 +286,9 @@ module Cascading
     # The named options are:
     # * <tt>:pattern</tt> a string. Specifies a regular expression pattern used to filter the tuples. If this
     # option is provided, then the filter is regular expression-based. This is incompatible with the _expression_ option.
-    # * <tt>:expression</tt> a string. Specifies a Janino expression used to filter the tuples. This option has the 
-    # same effect than providing it as first unamed argument. If this option is provided, then the filter is Janino 
-    # expression-based. This is incompatible with the _pattern_ option. 
+    # * <tt>:expression</tt> a string. Specifies a Janino expression used to filter the tuples. This option has the
+    # same effect than providing it as first unamed argument. If this option is provided, then the filter is Janino
+    # expression-based. This is incompatible with the _pattern_ option.
     def filter(*args)
       options = args.extract_options!
       from = options.delete(:from) || all_fields
@@ -296,9 +312,9 @@ module Cascading
     # The first unamed argument, if provided, is a filtering expression (using the Janino syntax).
     #
     # The named options are:
-    # * <tt>:expression</tt> a string. Specifies a Janino expression used to filter the tuples. This option has the 
-    # same effect than providing it as first unamed argument. If this option is provided, then the filter is Janino 
-    # expression-based. 
+    # * <tt>:expression</tt> a string. Specifies a Janino expression used to filter the tuples. This option has the
+    # same effect than providing it as first unamed argument. If this option is provided, then the filter is Janino
+    # expression-based.
     def reject(*args)
       options = args.extract_options
       raise "Regex not allowed" if options && options[:pattern]
@@ -311,17 +327,17 @@ module Cascading
     # The first unamed argument, if provided, is a filtering expression (using the Janino syntax).
     #
     # The named options are:
-    # * <tt>:expression</tt> a string. Specifies a Janino expression used to select the tuples. This option has the 
-    # same effect than providing it as first unamed argument. If this option is provided, then the filter is Janino 
-    # expression-based. 
+    # * <tt>:expression</tt> a string. Specifies a Janino expression used to select the tuples. This option has the
+    # same effect than providing it as first unamed argument. If this option is provided, then the filter is Janino
+    # expression-based.
     def where(*args)
       options = args.extract_options
       raise "Regex not allowed" if options && options[:pattern]
 
       if options[:expression]
-        options[:expression] = "!(#{options[:expression]})" 
+        options[:expression] = "!(#{options[:expression]})"
       elsif args[0]
-        args[0] = "!(#{args[0]})" 
+        args[0] = "!(#{args[0]})"
       end
 
       filter(*args)
@@ -345,7 +361,7 @@ module Cascading
 
       each from, :function => expression_function(into, options), :output=>output
     end
-    
+
     # Builds a pipe that returns distinct tuples based on the provided fields.
     #
     # The method accepts optional unamed argument specifying the fields to base the distinct on
@@ -356,15 +372,13 @@ module Cascading
       group_by *fields
       pass
     end
-      
+
     # Builds a pipe that will unify (merge) pipes. The method accepts the list of pipes as argument.
-    # Tuples unified must share the same fields.   
+    # Tuples unified must share the same fields.
     def union(*args)
       options = args.extract_options!
       pipes = args
-      
       union_pipes pipes
     end
   end # module PipeHelpers
-  
 end # module Cascading
