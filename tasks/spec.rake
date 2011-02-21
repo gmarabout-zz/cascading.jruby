@@ -6,9 +6,14 @@ namespace :spec do
 
   desc 'Run all specs with basic output'
   Spec::Rake::SpecTask.new(:run) do |t|
+    # Allow user to specify specs to run at command line
+    _, spec_files = ARGV
+    spec_files ||= PROJ.spec.files
+    puts "Running specs: #{spec_files}"
+
     t.ruby_opts = PROJ.ruby_opts
     t.spec_opts = PROJ.spec.opts
-    t.spec_files = PROJ.spec.files
+    t.spec_files = spec_files
     t.libs += PROJ.libs
   end
 
