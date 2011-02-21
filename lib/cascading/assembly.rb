@@ -224,9 +224,9 @@ module Cascading
       node.primary(*new_key)
     end
 
-    def cast(node, *args)
-      names = args[0]
-      types = args[1]
+    def cast node, type_map
+      names = type_map.keys.sort
+      types = JAVA_TYPE_MAP.values_at(*type_map.values_at(*names))
       fields = Cascading.fields(names)
       types = types.to_java(java.lang.Class)
       operation = Java::CascadingOperation::Identity.new(fields, types)
