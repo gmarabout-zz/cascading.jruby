@@ -80,6 +80,7 @@ module Cascading
       properties['mapred.output.compress'] = 'true'
       properties['mapred.output.compression.codec'] = case codec
         when :default then Java::OrgApacheHadoopIoCompress::DefaultCodec.java_class.name
+        when :gzip then Java::OrgApacheHadoopIoCompress::GzipCodec.java_class.name
         else raise "Codec #{codec} not yet supported by cascading.jruby"
         end
       properties['mapred.output.compression.type'] = case type
