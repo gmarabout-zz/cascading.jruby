@@ -1,7 +1,5 @@
-#! /usr/bin/ruby
-
 require 'test/unit'
-require 'cascading/assembly'
+require 'cascading'
 
 def compare_with_references(test_name)
   result = compare_files("test/references/#{test_name}.txt", "output/#{test_name}/part-00000")

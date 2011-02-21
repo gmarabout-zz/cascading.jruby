@@ -1,5 +1,3 @@
-#! /usr/bin/env jruby
-
 require 'test/unit'
 require 'cascading'
 

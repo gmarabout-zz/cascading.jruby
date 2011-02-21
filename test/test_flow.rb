@@ -1,8 +1,5 @@
-
 require 'test/unit'
-require 'cascading/flow'
-require 'cascading/assembly'
-
+require 'cascading'
 
 class TC_Flow < Test::Unit::TestCase
 
