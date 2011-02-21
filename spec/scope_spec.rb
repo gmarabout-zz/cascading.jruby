@@ -158,8 +158,8 @@ describe Cascading::Scope do
             sum :mapping => {'x' => 'x_sum'}, :type => :int
           end
         end
-      rescue NativeException => e
-        raise e.cause.cause.cause
+      rescue CascadingException => e
+        raise e.cause(4)
       end
     end.should raise_error java.lang.IllegalStateException, 'Every cannot follow a Tap or an Each'
   end
