@@ -4,6 +4,10 @@
 #
 # This is free software. Please see the LICENSE and COPYING files for details.
 module Cascading
+  def cascade(name, &block)
+    Cascade.new(name, &block)
+  end
+
   # Creates a cascading.tuple.Fields instance from a string or an array of strings.
   def fields(fields) 
     if fields.nil?
