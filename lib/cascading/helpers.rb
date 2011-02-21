@@ -323,6 +323,18 @@ module Cascading
       end
     end
 
+    def filter_null(*args)
+      options = args.extract_options!
+      each(args, :filter => Java::CascadingOperationFilter::FilterNull.new)
+    end
+    alias reject_null filter_null
+
+    def filter_not_null(*args)
+      options = args.extract_options!
+      each(args, :filter => Java::CascadingOperationFilter::FilterNotNull.new)
+    end
+    alias where_null filter_not_null
+
     # Builds a pipe that rejects the tuples based on an expression.
     #
     # The first unamed argument, if provided, is a filtering expression (using the Janino syntax).
