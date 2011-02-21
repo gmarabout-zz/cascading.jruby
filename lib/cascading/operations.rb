@@ -195,5 +195,13 @@ module Cascading
       Java::CascadingOperationRegex::RegexReplace.new(*parameters)
     end
 
+    def field_joiner(*args)
+      options = args.extract_options!
+      delimiter = options[:delimiter] || ','
+      fields = fields(options[:into])
+
+      parameters = [fields, delimiter].compact
+      Java::CascadingOperationText::FieldJoiner.new(*parameters)
+    end
   end
 end

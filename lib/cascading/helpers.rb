@@ -408,5 +408,12 @@ module Cascading
       pipes = args
       union_pipes pipes
     end
+
+    def join_fields(*args)
+      options = args.extract_options!
+      output = options[:output] || all_fields
+
+      each args, :function => field_joiner(options), :output => output
+    end
   end # module PipeHelpers
 end # module Cascading
