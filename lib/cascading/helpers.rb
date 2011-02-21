@@ -52,6 +52,7 @@ module Cascading
     end
 
     def expr(s)
+      return s if s.kind_of?(ExprStub)
       ExprStub.new(s)
     end
 
