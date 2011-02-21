@@ -7,8 +7,6 @@
 require "cascading/assembly"
 
 module Cascading
-
-
   class FlowFactory
     def assembly(node, *args, &block)
       name = args[0]
@@ -22,11 +20,11 @@ module Cascading
 
 
   class Flow < Cascading::Node
-
-    attr_accessor :properties, :sources, :sinks, :outgoing_scopes
+    attr_accessor :properties, :sources, :sinks, :outgoing_scopes, :listeners
 
     def initialize(name, parent=nil, &block)
       @properties, @sources, @sinks, @outgoing_scopes = {}, {}, {}, {}
+      @listeners = []
       super(name, parent, &block)
     end
 
@@ -104,6 +102,10 @@ module Cascading
       add_to_distributed_cache(file, "mapred.cache.archives")
     end
 
+    def add_listener(listener)
+      @listeners << listener
+    end
+
     def emr_local_path_for_distributed_cache_file(file)
       # NOTE this needs to be *appended* to the property mapred.local.dir
       if file =~ /^s3n?:\/\//
@@ -133,8 +135,13 @@ module Cascading
     end
 
     def complete(properties = nil)
-      flow = connect(properties)
-      flow.complete
+      begin
+        flow = connect(properties)
+        @listeners.each { |l| flow.addListener(l) }
+        flow.complete
+      rescue Exception => e
+        raise CascadingException.new(e, "error building flow")
+      end
     end
     
     private
