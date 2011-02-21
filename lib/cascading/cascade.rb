@@ -7,7 +7,7 @@
 require "cascading/base"
 
 module Cascading
-  class CascadeFactory 
+  class CascadeFactory
 
     def flow(node, *args, &block)
       name = args[0]
@@ -41,9 +41,13 @@ module Cascading
     end
 
     def complete(properties = nil)
-      parameters = make_flows(@children, properties)
-      cascade = Java::CascadingCascade::CascadeConnector.new().connect(parameters)
-      cascade.complete
+      begin
+        parameters = make_flows(@children, properties)
+        cascade = Java::CascadingCascade::CascadeConnector.new.connect(parameters)
+        cascade.complete
+      rescue NativeException => e
+        raise CascadingException.new(e, 'Error completing cascade')
+      end
     end
 
     private

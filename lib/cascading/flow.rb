@@ -29,18 +29,18 @@ module Cascading
     end
 
     # Create a new sink for this flow, with the specified name.
-    # "tap" can be either a tap (see Cascading.tap) or a string that will 
+    # "tap" can be either a tap (see Cascading.tap) or a string that will
     # reference a path.
     def sink(*args)
       if (args.size == 2)
         @sinks[args[0]] = args[1]
       elsif (args.size == 1)
         @sinks[@name] =  args[0]
-      end 
+      end
     end
 
     # Create a new source for this flow, with the specified name.
-    # "tap" can be either a tap (see Cascading.tap) or a string that will 
+    # "tap" can be either a tap (see Cascading.tap) or a string that will
     # reference a path.
     def source(*args)
       if (args.size == 2)
@@ -139,20 +139,20 @@ module Cascading
         flow = connect(properties)
         @listeners.each { |l| flow.addListener(l) }
         flow.complete
-      rescue Exception => e
-        raise CascadingException.new(e, "error building flow")
+      rescue NativeException => e
+        raise CascadingException.new(e, 'Error completing flow')
       end
     end
-    
+
     private
-    
+
     def build_connect_parameter
       sources = make_tap_parameter(@sources)
       sinks = make_tap_parameter(@sinks)
       pipes = make_pipes
       [sources, sinks, pipes]
     end
-    
+
     def make_tap_parameter taps
       taps.keys.inject({}) do |map, key|
         assembly = Assembly.get(key)
