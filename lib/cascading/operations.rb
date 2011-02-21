@@ -1,12 +1,9 @@
-# operations.rb
-#
 # Copyright 2009, Grégoire Marabout. All Rights Reserved.
 #
 # This is free software. Please see the LICENSE and COPYING files for details.
 
 module Cascading
   module Operations
-
     def identity
       Java::CascadingOperation::Identity.new
     end
@@ -53,7 +50,7 @@ module Cascading
 
     def regex_parser(*args)
       options = args.extract_options!
-      
+
       pattern = args[0].to_s
       fields = Cascading.fields(options[:fields])
       groups = options[:groups].to_java(:int) if options[:groups]
@@ -114,11 +111,11 @@ module Cascading
 
       Java::CascadingOperationExpression::ExpressionFunction.new(*arguments)
     end
-    
+
     def insert_function(*args)
       options=args.extract_options!
       fields = Cascading.fields(args)
-      values = options[:values] 
+      values = options[:values]
 
       parameters = [fields, to_java_comparable_array(values)].compact
       Java::CascadingOperation::Insert.new(*parameters)
@@ -178,7 +175,7 @@ module Cascading
 
       pattern = args[0]
       remove_match = options[:remove_match]
-      match_each_element = options[:match_each_element] 
+      match_each_element = options[:match_each_element]
       parameters = [pattern.to_s, remove_match, match_each_element].compact
       Java::CascadingOperationRegex::RegexFilter.new(*parameters)
     end

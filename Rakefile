@@ -19,10 +19,9 @@ ensure_in_path 'lib'
 
 require 'cascading'
 
-
 task :default => 'test:run'
 
-task :run do 
+task :run do
   # ensure_in_path "samples"
   puts "Running #{ARGS[0]}"
   require "samples/#{ARGS[0]}"

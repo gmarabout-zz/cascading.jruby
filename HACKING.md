@@ -12,6 +12,4 @@ will produce the gem in the pkg/ sub-directory. After that, just cd to this dire
 
 The `Cascading::Operations` module is mixed-in the `Cascading::Assembly` class to provide some shortcuts for common operations.
 
-The high level commands for creating new pipes are defined in cascading/helpers.rb.
-
 The file cascading/cascading.rb defines global helper methods for cascading like tap creation, fields creation, etc. 

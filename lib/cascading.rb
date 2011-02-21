@@ -1,7 +1,3 @@
-# encoding: utf-8
- 
-# cascading.rb : A DSL library for Cascading, in JRuby.
-#
 # Copyright 2009, Grégoire Marabout. All Rights Reserved.
 #
 # This is free software. Please see the LICENSE and COPYING files for details.
@@ -9,15 +5,13 @@
 require 'java'
 
 module Cascading
-
   # :stopdoc:
   VERSION = '0.0.3'
   LIBPATH = ::File.expand_path(::File.dirname(__FILE__)) + ::File::SEPARATOR
   PATH = ::File.dirname(LIBPATH) + ::File::SEPARATOR
-  
   CASCADING_HOME = ENV['CASCADING_HOME']
   HADOOP_HOME = ENV['HADOOP_HOME']
-  
+
   # :startdoc:
 
   # Returns the version string for the library.
@@ -51,23 +45,22 @@ module Cascading
     dir ||= ::File.basename(fname, '.*')
     search_me = ::File.expand_path(
         ::File.join(::File.dirname(fname), dir, '**', '*.rb'))
-      
-    Dir.glob(search_me).sort.each do |rb| 
+
+    Dir.glob(search_me).sort.each do |rb|
       #puts "required: #{rb}"
       require rb
     end
   end
-  
+
   def self.require_all_jars(from = ::File.join(::File.dirname(__FILE__), "..", "jars"))
     search_me = ::File.expand_path(
         ::File.join(from, '**', '*.jar'))
-    Dir.glob(search_me).sort.each do |jar| 
+    Dir.glob(search_me).sort.each do |jar|
       #puts "required: #{jar}"
       require jar
     end
   end
-
-end  # module Cascading
+end
 
 Cascading.require_all_jars(Cascading::HADOOP_HOME) if Cascading::HADOOP_HOME
 Cascading.require_all_jars(Cascading::CASCADING_HOME) if Cascading::CASCADING_HOME

@@ -2,9 +2,22 @@
 #
 # This is free software. Please see the LICENSE and COPYING files for details.
 
+require 'cascading/expr_stub'
+
 module Cascading
+  JAVA_TYPE_MAP = {
+    :int => java.lang.Integer.java_class, :long => java.lang.Long.java_class,
+    :bool => java.lang.Boolean.java_class, :double => java.lang.Double.java_class,
+    :float => java.lang.Float.java_class, :string => java.lang.String.java_class,
+  }
+
   def cascade(name, &block)
     Cascade.new(name, &block)
+  end
+
+  def expr(s)
+    return s if s.kind_of?(ExprStub)
+    ExprStub.new(s)
   end
 
   # Creates a cascading.tuple.Fields instance from a string or an array of strings.
