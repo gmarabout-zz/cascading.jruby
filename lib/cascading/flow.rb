@@ -144,16 +144,12 @@ module Cascading
       [sources, sinks, pipes]
     end
 
-    def make_tap_parameter taps
-      taps.keys.inject({}) do |map, key|
-        assembly = Assembly.get(key)
+    def make_tap_parameter(taps)
+      taps.keys.inject({}) do |map, name|
+        assembly = Assembly.get(name)
+        raise "Could not find assembly '#{name}' to connect to tap #{taps[name]}" unless assembly
 
-        if assembly
-          map[assembly.tail_pipe.name] = taps[key]
-        else
-          map[key] = taps[key]
-        end
-
+        map[assembly.tail_pipe.name] = taps[name]
         map
       end
     end
