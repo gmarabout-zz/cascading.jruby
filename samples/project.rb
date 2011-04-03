@@ -1,22 +1,25 @@
 #! /usr/bin/env jruby
 $: << File.join(File.dirname(__FILE__), '..', 'lib')
 
+# History: "project" (verb) used to be known as "restrict"
+
 require 'cascading'
 require 'samples/cascading'
 
 input = 'samples/data/data2.txt'
-output = 'output/rename'
+output = 'output/restrict'
 
-cascade 'rename' do
-  flow 'rename' do
+cascade 'project' do
+  flow 'project' do
     source 'input', tap(input)
 
     assembly 'input' do
       split 'line', ['name', 'score1', 'score2', 'id'], :output => ['name', 'score1', 'score2', 'id']
       assert Java::CascadingOperationAssertion::AssertSizeEquals.new(4)
-      rename 'name' => 'new_name', 'score1' => 'new_score1', 'score2' => 'new_score2'
-      assert Java::CascadingOperationAssertion::AssertSizeEquals.new(4)
-      puts "Final field names: #{scope.values_fields.to_a.inspect}"
+      project 'name', 'score1', 'score2'
+      assert Java::CascadingOperationAssertion::AssertSizeEquals.new(3)
+      project 'name', 'score2'
+      assert Java::CascadingOperationAssertion::AssertSizeEquals.new(2)
     end
 
     sink 'input', tap(output, :sink_mode => :replace)
