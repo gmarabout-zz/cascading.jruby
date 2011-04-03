@@ -3,7 +3,8 @@ namespace :samples do
   task :run do
     Dir.glob('samples/*.rb') do |sample|
       next unless File.executable?(sample)
-      system(sample)
+      success = system(sample)
+      raise "#{sample} sample app failed" unless success
     end
   end
 end
