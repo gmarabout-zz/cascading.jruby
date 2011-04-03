@@ -17,14 +17,14 @@ module Cascading
     end
 
     def draw(dir, properties = nil)
-      @children.each do |flow|
-        flow.connect(properties).writeDOT("#{dir}/#{flow.name}.dot")
+      @children.each do |name, flow|
+        flow.connect(properties).writeDOT("#{dir}/#{name}.dot")
       end
     end
 
     def sink_metadata
-      @children.inject({}) do |sink_fields, flow|
-        sink_fields[flow.name] = flow.sink_metadata
+      @children.inject({}) do |sink_fields, (name, flow)|
+        sink_fields[name] = flow.sink_metadata
         sink_fields
       end
     end
@@ -48,7 +48,7 @@ module Cascading
     private
 
     def make_flows(flows, properties)
-      flow_instances = flows.map do |flow|
+      flow_instances = flows.map do |name, flow|
         cascading_flow = flow.connect(properties)
         flow.listeners.each { |l| cascading_flow.addListener(l) }
         cascading_flow

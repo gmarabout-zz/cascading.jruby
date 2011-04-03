@@ -43,14 +43,14 @@ module Cascading
     end
 
     def scope(name = nil)
-      raise 'Must specify name if no children have been defined yet' unless name || @children.last
-      name ||= @children.last.name
+      raise 'Must specify name if no children have been defined yet' unless name || last_child
+      name ||= last_child.name
       @outgoing_scopes[name]
     end
 
     def debug_scope(name = nil)
       scope = scope(name)
-      name ||= @children.last.name
+      name ||= last_child.name
       puts "Scope for '#{name}':\n  #{scope}"
     end
 

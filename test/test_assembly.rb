@@ -205,8 +205,8 @@ class TC_Assembly < Test::Unit::TestCase
     end
 
     assert_equal 2, assembly.children.size
-    assert_equal 1, assembly.children[1].children.size
-
+    assert_equal 0, assembly.children['branch1'].children.size
+    assert_equal 1, assembly.children['branch2'].children.size
   end
 
   def test_branch_single
@@ -219,8 +219,8 @@ class TC_Assembly < Test::Unit::TestCase
     end
 
     assert_equal 1, assembly.children.size
-    assert_equal 1, assembly.children[0].children.size
-
+    assert_equal 1, assembly.children['branch1'].children.size
+    assert_equal 0, assembly.children['branch1'].children['branch2'].children.size
   end
 
   # Fixed this test, but it isn't even valid.  You shouldn't be able to follow
