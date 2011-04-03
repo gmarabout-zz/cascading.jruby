@@ -274,77 +274,55 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
     end
   end
 
-
   def test_join1
-    flow = Flow.new("splitter", nil) do
+    cascade 'splitter' do
+      flow 'splitter' do
+        source "data1", tap("test/data/data1.txt")
+        source "data2", tap("test/data/data2.txt")
+        sink "joined", tap('output/joined', :sink_mode => :replace)
 
-      source "data1", tap("test/data/data1.txt")
-      source "data2", tap("test/data/data2.txt")
-      sink "joined", tap('output/joined', :sink_mode => :replace)
+        assembly1 = assembly "data1" do
+          split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
+          assert_size_equals 4
+          assert_not_null
+          debug :print_fields => true
+        end
 
-      assembly1 = assembly "data1" do
+        assembly2 = assembly "data2" do
+          split "line", :pattern => /[.,]*\s+/, :into=>["name",  "id", "town"], :output => ["name",  "id", "town"]
+          assert_size_equals 3
+          assert_not_null
+          debug :print_fields => true
+        end
 
-        split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
-
-        assert_size_equals 4
-
-        assert_not_null
-        debug :print_fields=>true
-
+        assembly "joined" do
+          join assembly1, assembly2, :on => ["name", "id"], :declared_fields => ["name", "score1", "score2", "id", "name2", "id2", "town"]
+          assert_size_equals 7
+          assert_not_null
+        end
       end
-
-      assembly2 = assembly "data2" do
-
-        split "line", :pattern => /[.,]*\s+/, :into=>["name",  "id", "town"], :output => ["name",  "id", "town"]
-
-        assert_size_equals 3
-
-        assert_not_null
-        debug :print_fields=>true
-      end
-
-      assembly "joined" do
-        join assembly1, assembly2, :on => ["name", "id"], :declared_fields => ["name", "score1", "score2", "id", "name2", "id2", "town"]
-
-        assert_size_equals 7
-
-        assert_not_null
-
-      end
-    end
-    flow.complete
+    end.complete
   end
 
   def test_join2
      flow = Flow.new("splitter", nil) do
-
        source "data1", tap("test/data/data1.txt")
        source "data2", tap("test/data/data2.txt")
        sink "joined", tap('output/joined', :sink_mode => :replace)
 
        assembly "data1" do
-
          split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
-
-         debug :print_fields=>true
-
+         debug :print_fields => true
        end
 
        assembly "data2" do
-
          split "line", :pattern => /[.,]*\s+/, :into=>["name",  "code", "town"], :output => ["name",  "code", "town"]
-
-         debug :print_fields=>true
+         debug :print_fields => true
        end
 
        assembly "joined" do
          join :on => {"data1"=>["name", "id"], "data2"=>["name", "code"]}, :declared_fields => ["name", "score1", "score2", "id", "name2", "code", "town"]
        end
-     end
-    begin
-      flow.complete
-    rescue NativeException => e
-      throw CascadingException.new(e, 'Flow failed to complete')
-    end
+     end.complete
    end
 end
