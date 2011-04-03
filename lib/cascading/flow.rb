@@ -145,23 +145,22 @@ module Cascading
     end
 
     def make_tap_parameter(taps)
-      taps.keys.inject({}) do |map, name|
-        assembly = Assembly.get(name)
-        raise "Could not find assembly '#{name}' to connect to tap #{taps[name]}" unless assembly
+      taps.inject({}) do |map, (name, tap)|
+        assembly = find_child(name)
+        raise "Could not find assembly '#{name}' to connect to tap: #{tap}" unless assembly
 
-        map[assembly.tail_pipe.name] = taps[name]
+        map[assembly.tail_pipe.name] = tap
         map
       end
     end
 
     def make_pipes
-      pipes = []
-      @sinks.keys.each do |key|
-        assembly = Assembly.get(key)
-        raise "Undefined assembly #{key}" unless assembly
+      @sinks.inject([]) do |pipes, (name, sink)|
+        assembly = find_child(name)
+        raise "Could not find assembly '#{name}' to make pipe for sink: #{sink}" unless assembly
         pipes << assembly.tail_pipe
-      end
-      return pipes.to_java(Java::CascadingPipe::Pipe)
+        pipes
+      end.to_java(Java::CascadingPipe::Pipe)
     end
   end
 end

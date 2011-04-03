@@ -25,6 +25,15 @@ module Cascading
       @last_child = node
       node
     end
+
+    def find_child(name)
+      children.each do |child_name, child|
+        return child if child_name == name
+        result = child.find_child(name)
+        return result if result
+      end
+      return nil
+    end
   end
 
   # A module to add auto-registration capability
