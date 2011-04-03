@@ -10,15 +10,18 @@ module Cascading
 
     attr_accessor :properties, :sources, :sinks, :outgoing_scopes, :listeners
 
-    def initialize(name, parent, &block)
+    def initialize(name, parent)
       @properties, @sources, @sinks, @outgoing_scopes, @listeners = {}, {}, {}, {}, []
       self.class.add(name, self)
-      super(name, parent, &block)
+      super(name, parent)
     end
 
     def assembly(name, &block)
       raise "Could not build assembly '#{name}'; block required" unless block_given?
-      add_child(Assembly.new(name, self, @outgoing_scopes, &block))
+      assembly = Assembly.new(name, self, @outgoing_scopes)
+      add_child(assembly)
+      assembly.instance_eval(&block)
+      assembly
     end
 
     # Create a new sink for this flow, with the specified name.

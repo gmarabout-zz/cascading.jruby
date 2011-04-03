@@ -72,4 +72,29 @@ describe Cascading do
     diff = `diff #{OUTPUT_DIR}/double_out/part-00000 #{OUTPUT_DIR}/pass_out/part-00000`
     diff.should_not be_empty
   end
+
+  it 'should support joins in branches' do
+    cascade 'branch_join' do
+      flow 'branch_join' do
+        source 'left', tap('spec/resource/join_input.txt', :kind => :lfs, :scheme => text_line_scheme)
+        source 'right', tap('spec/resource/join_input.txt', :kind => :lfs, :scheme => text_line_scheme)
+
+        assembly 'left' do
+          split 'line', ['x', 'y', 'z'], :pattern => /,/
+          project 'x', 'y', 'z'
+        end
+
+        assembly 'right' do
+          split 'line', ['x', 'y', 'z'], :pattern => /,/
+          project 'x', 'y', 'z'
+
+          branch 'branch_join' do
+            join 'left', 'right', :on => 'x'
+          end
+        end
+
+        sink 'branch_join', tap("#{OUTPUT_DIR}/branch_join_out.txt", :kind => :lfs, :sink_mode => :replace)
+      end
+    end.complete
+  end
 end

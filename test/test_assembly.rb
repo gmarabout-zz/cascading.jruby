@@ -6,11 +6,18 @@ def compare_with_references(test_name)
   assert_nil(result)
 end
 
+# Convenience for basic assembly tests; not valid for applications
+def assembly(name, &block)
+  assembly = Assembly.new(name, nil)
+  assembly.instance_eval(&block)
+  assembly
+end
+
 class TC_Assembly < Test::Unit::TestCase
   include Operations
 
   def mock_assembly(&block)
-    Flow.new('test', nil) do
+    flow 'test' do
       source 'test', tap('test/data/data1.txt')
 
       $assembly = assembly 'test' do
@@ -21,7 +28,7 @@ class TC_Assembly < Test::Unit::TestCase
   end
 
   def test_create_assembly_simple
-    assembly = Assembly.new("assembly1", nil) do
+    assembly = assembly "assembly1" do
       # Empty assembly
     end
 
@@ -190,7 +197,8 @@ class TC_Assembly < Test::Unit::TestCase
 
   def test_branch_unique
     assembly = mock_assembly do
-      branch 'branch1'
+      branch 'branch1' do
+      end
     end
 
     assert_equal 1, assembly.children.size
@@ -203,7 +211,8 @@ class TC_Assembly < Test::Unit::TestCase
       end
 
       branch 'branch2' do
-        branch 'branch3'
+        branch 'branch3' do
+        end
       end
     end
 
@@ -248,33 +257,17 @@ end
 class TC_AssemblyScenarii < Test::Unit::TestCase
 
   def test_splitter
-    flow = Flow.new("splitter", nil) do
-
+    flow = flow "splitter" do
       source "copy", tap("test/data/data1.txt")
       sink "copy", tap('output/splitter', :sink_mode => :replace)
 
       assembly "copy" do
-
         split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
-
         assert_size_equals 4
-
         assert_not_null
-
-        debug :print_fields=>true
+        debug :print_fields => true
       end
-    end
-    # Had to wrap this in a CascadingException so that I could see the message
-    # of the deepest cause -- which told me the output already existed.
-    #
-    # We can safely wrap all calls to Cascading in CE once we change it to
-    # print the stack trace of -every- exception in the cause chain (otherwise
-    # it eats the stack trace and you can't dig down into the Cascading code).
-    begin
-      flow.complete
-    rescue NativeException => e
-      throw CascadingException.new(e, 'Flow failed to complete')
-    end
+    end.complete
   end
 
   def test_join1
@@ -308,24 +301,24 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
   end
 
   def test_join2
-     flow = Flow.new("splitter", nil) do
-       source "data1", tap("test/data/data1.txt")
-       source "data2", tap("test/data/data2.txt")
-       sink "joined", tap('output/joined', :sink_mode => :replace)
+    flow = flow "splitter" do
+      source "data1", tap("test/data/data1.txt")
+      source "data2", tap("test/data/data2.txt")
+      sink "joined", tap('output/joined', :sink_mode => :replace)
 
-       assembly "data1" do
-         split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
-         debug :print_fields => true
-       end
+      assembly "data1" do
+        split "line", :pattern => /[.,]*\s+/, :into=>["name", "score1", "score2", "id"], :output => ["name", "score1", "score2", "id"]
+        debug :print_fields => true
+      end
 
-       assembly "data2" do
-         split "line", :pattern => /[.,]*\s+/, :into=>["name",  "code", "town"], :output => ["name",  "code", "town"]
-         debug :print_fields => true
-       end
+      assembly "data2" do
+        split "line", :pattern => /[.,]*\s+/, :into=>["name",  "code", "town"], :output => ["name",  "code", "town"]
+        debug :print_fields => true
+      end
 
-       assembly "joined" do
-         join :on => {"data1"=>["name", "id"], "data2"=>["name", "code"]}, :declared_fields => ["name", "score1", "score2", "id", "name2", "code", "town"]
-       end
+      assembly "joined" do
+        join :on => {"data1"=>["name", "id"], "data2"=>["name", "code"]}, :declared_fields => ["name", "score1", "score2", "id", "name2", "code", "town"]
+      end
      end.complete
    end
 end

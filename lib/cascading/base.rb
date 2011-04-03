@@ -6,12 +6,11 @@ module Cascading
   class Node
     attr_accessor :name, :parent, :children, :last_child
 
-    def initialize(name, parent, &block)
+    def initialize(name, parent)
       @name = name
       @parent = parent
       @children = {}
       @last_child = nil
-      instance_eval(&block) if block
     end
 
     def add_child(node)

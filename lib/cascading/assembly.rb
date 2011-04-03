@@ -12,24 +12,21 @@ module Cascading
 
     attr_accessor :tail_pipe, :head_pipe, :outgoing_scopes, :scope
 
-    def initialize(name, parent, outgoing_scopes = {}, &block)
+    def initialize(name, parent, outgoing_scopes = {})
       @every_applied = false
       @outgoing_scopes = outgoing_scopes
       if parent.kind_of?(Assembly)
         @head_pipe = Java::CascadingPipe::Pipe.new(name, parent.tail_pipe)
         # Copy to allow destructive update of name
-        @scope = parent.scope.copy
+        update_scope(parent.scope.copy)
         @scope.scope.name = name
       else # Parent is a Flow
         @head_pipe = Java::CascadingPipe::Pipe.new(name)
-        @scope = @outgoing_scopes[name] || Scope.empty_scope(name)
+        update_scope(@outgoing_scopes[name] || Scope.empty_scope(name))
       end
       @tail_pipe = @head_pipe
 
-      super(name, parent, &block)
-
-      # Record outgoing scope
-      @outgoing_scopes[name] = @scope
+      super(name, parent)
     end
 
     def parent_flow
@@ -97,7 +94,7 @@ module Cascading
 
     def make_pipe(type, parameters, grouping_key_fields = [], incoming_scopes = [@scope])
       @tail_pipe = type.new(*parameters)
-      @scope = Scope.outgoing_scope(@tail_pipe, incoming_scopes, grouping_key_fields, every_applied?)
+      update_scope(Scope.outgoing_scope(@tail_pipe, incoming_scopes, grouping_key_fields, every_applied?))
     end
 
     def to_s
@@ -205,8 +202,12 @@ module Cascading
     end
 
     # Builds a new branch. The name of the branch is specified as first item in args array.
-    def branch(*args, &block)
-      add_child(Assembly.new(args[0], self, @outgoing_scopes, &block))
+    def branch(name, &block)
+      raise "Could not build branch '#{name}'; block required" unless block_given?
+      assembly = Assembly.new(name, self, @outgoing_scopes)
+      add_child(assembly)
+      assembly.instance_eval(&block)
+      assembly
     end
 
     # Builds a new _group_by_ pipe. The fields used for grouping are specified in the args
@@ -716,6 +717,13 @@ module Cascading
       output = options[:output] || all_fields
 
       each args, :function => field_joiner(options), :output => output
+    end
+
+    private
+
+    def update_scope(scope)
+      @scope = scope
+      @outgoing_scopes[name] = @scope
     end
   end
 end

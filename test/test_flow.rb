@@ -3,7 +3,7 @@ require 'cascading'
 
 class TC_Flow < Test::Unit::TestCase
   def test_assembly
-    flow = Flow.new("My Flow1", nil) do
+    flow = flow 'My Flow1' do
       assembly "Test1" do
       end
     end

@@ -9,14 +9,17 @@ module Cascading
   class Cascade < Cascading::Node
     extend Registerable
 
-    def initialize(name, &block)
+    def initialize(name)
       self.class.add(name, self)
-      super(name, nil, &block) # A Cascade cannot have a parent
+      super(name, nil) # A Cascade cannot have a parent
     end
 
     def flow(name, &block)
       raise "Could not build flow '#{name}'; block required" unless block_given?
-      add_child(Flow.new(name, self, &block))
+      flow = Flow.new(name, self)
+      add_child(flow)
+      flow.instance_eval(&block)
+      flow
     end
 
     def draw(dir, properties = nil)

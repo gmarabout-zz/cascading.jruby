@@ -32,21 +32,10 @@ module Cascading
 end
 
 def test_flow(&block)
-  cascade = Cascade.new('test_app') do
-    flow 'test' do
-      instance_eval(&block)
-    end
+  cascade = cascade 'test_app' do
+    flow 'test', &block
   end
   cascade.complete(cascading_properties)
-end
-
-def fail_flow(&block)
-  cascade = Cascade.new('test_app') do
-    flow 'test' do
-      instance_eval(&block)
-    end
-  end
-  lambda { cascade.complete(cascading_properties) }.should raise_error
 end
 
 def test_assembly(params = {}, &block)
@@ -58,9 +47,7 @@ def test_assembly(params = {}, &block)
     # Default Fields defined by TextLineScheme
     check_scope :source => 'input', :values_fields => ['offset', 'line']
 
-    assembly 'input' do
-      instance_eval(&block)
-    end
+    assembly 'input', &block
 
     sink 'input', tap("#{OUTPUT_DIR}/out.txt", :kind => :lfs, :sink_mode => :replace)
 

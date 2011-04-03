@@ -13,7 +13,16 @@ module Cascading
 
   def cascade(name, &block)
     raise "Could not build cascade '#{name}'; block required" unless block_given?
-    Cascade.new(name, &block)
+    cascade = Cascade.new(name)
+    cascade.instance_eval(&block)
+    cascade
+  end
+
+  # For applications built of Flows with no Cascades
+  def flow(name, &block)
+    flow = Flow.new(name, nil)
+    flow.instance_eval(&block)
+    flow
   end
 
   def expr(s)
