@@ -6,10 +6,13 @@ require 'cascading/assembly'
 
 module Cascading
   class Flow < Cascading::Node
+    extend Registerable
+
     attr_accessor :properties, :sources, :sinks, :outgoing_scopes, :listeners
 
     def initialize(name, parent, &block)
       @properties, @sources, @sinks, @outgoing_scopes, @listeners = {}, {}, {}, {}, []
+      self.class.add(name, self)
       super(name, parent, &block)
     end
 

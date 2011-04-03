@@ -6,17 +6,11 @@ module Cascading
   class Node
     attr_accessor :name, :parent, :children, :last_child
 
-    # Makes child Registerable
-    def self.inherited(child)
-      child.send(:extend, Registerable)
-    end
-
     def initialize(name, parent, &block)
       @name = name
       @parent = parent
       @children = {}
       @last_child = nil
-      self.class.add(name, self)
       instance_eval(&block) if block
     end
 

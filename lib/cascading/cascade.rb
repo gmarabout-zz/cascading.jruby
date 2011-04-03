@@ -7,7 +7,10 @@ require 'yaml'
 
 module Cascading
   class Cascade < Cascading::Node
+    extend Registerable
+
     def initialize(name, &block)
+      self.class.add(name, self)
       super(name, nil, &block) # A Cascade cannot have a parent
     end
 
