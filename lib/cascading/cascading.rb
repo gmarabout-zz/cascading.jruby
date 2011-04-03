@@ -12,6 +12,7 @@ module Cascading
   }
 
   def cascade(name, &block)
+    raise "Could not build cascade '#{name}'; block required" unless block_given?
     Cascade.new(name, &block)
   end
 

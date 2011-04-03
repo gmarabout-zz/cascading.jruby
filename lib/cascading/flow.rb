@@ -14,7 +14,8 @@ module Cascading
     end
 
     def assembly(name, &block)
-      add_child(block ? Assembly.new(name, self, @outgoing_scopes, &block) : Assembly.get(name, self))
+      raise "Could not build assembly '#{name}'; block required" unless block_given?
+      add_child(Assembly.new(name, self, @outgoing_scopes, &block))
     end
 
     # Create a new sink for this flow, with the specified name.

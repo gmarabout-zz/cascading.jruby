@@ -12,7 +12,8 @@ module Cascading
     end
 
     def flow(name, &block)
-      add_child(block ? Flow.new(name, self, &block) : Flow.get(name, self))
+      raise "Could not build flow '#{name}'; block required" unless block_given?
+      add_child(Flow.new(name, self, &block))
     end
 
     def draw(dir, properties = nil)
