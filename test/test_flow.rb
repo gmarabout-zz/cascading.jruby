@@ -9,7 +9,7 @@ class TC_Flow < Test::Unit::TestCase
     end
 
     assert_equal 1, flow.children.size
-    assert_equal flow.children["Test1"], Assembly.get("Test1")
-    assert_equal flow.last_child, Assembly.get("Test1")
+    assert_equal flow.children["Test1"], flow.find_child("Test1")
+    assert_equal flow.last_child, flow.find_child("Test1")
   end
 end

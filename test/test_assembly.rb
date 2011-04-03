@@ -25,8 +25,7 @@ class TC_Assembly < Test::Unit::TestCase
       # Empty assembly
     end
 
-    assert_not_nil Assembly.get("assembly1")
-    assert_equal assembly, Assembly.get("assembly1")
+    assert_not_nil assembly
     pipe = assembly.tail_pipe
     assert pipe.is_a? Java::CascadingPipe::Pipe
   end
@@ -36,8 +35,12 @@ class TC_Assembly < Test::Unit::TestCase
       each 'offset', :filter => identity
     end
 
-    assert_not_nil Assembly.get('test')
-    assert_equal assembly, Assembly.get('test')
+    flow = Flow.get('test')
+    assert_not_nil flow
+
+    assert_not_nil flow.find_child('test')
+    assert_equal assembly, flow.find_child('test')
+    assert_not_nil Flow.get('test').find_child('test')
   end
 
   def test_create_each
@@ -296,7 +299,7 @@ class TC_AssemblyScenarii < Test::Unit::TestCase
         end
 
         assembly "joined" do
-          join assembly1, assembly2, :on => ["name", "id"], :declared_fields => ["name", "score1", "score2", "id", "name2", "id2", "town"]
+          join assembly1.name, assembly2.name, :on => ["name", "id"], :declared_fields => ["name", "score1", "score2", "id", "name2", "id2", "town"]
           assert_size_equals 7
           assert_not_null
         end

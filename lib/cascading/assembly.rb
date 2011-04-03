@@ -32,6 +32,11 @@ module Cascading
       @outgoing_scopes[name] = @scope
     end
 
+    def parent_flow
+      return parent if parent.is_a? Cascading::Flow
+      parent.parent_flow
+    end
+
     def debug_scope
       puts "Current scope for '#{name}':\n  #{@scope}\n----------\n"
     end
@@ -99,13 +104,13 @@ module Cascading
       "#{@name} : head pipe : #{@head_pipe} - tail pipe: #{@tail_pipe}"
     end
 
-    # Builds a join (CoGroup) pipe.
+    # Builds a join (CoGroup) pipe. Requires a list of assembly names to join.
     def join(*args, &block)
       options = args.extract_options!
 
       pipes, incoming_scopes = [], []
       args.each do |assembly_name|
-        assembly = Assembly.get(assembly_name)
+        assembly = parent_flow.find_child(assembly_name)
         raise "Could not find assembly '#{assembly_name}' in join" unless assembly
 
         pipes << assembly.tail_pipe
@@ -125,10 +130,10 @@ module Cascading
       elsif group_fields_args.is_a? ::Hash
         pipes, incoming_scopes = [], []
         keys = group_fields_args.keys.sort
-        keys.each do |k|
-          v = group_fields_args[k]
-          assembly = Assembly.get(k)
-          raise "Could not find assembly '#{k}' in join" unless assembly
+        keys.each do |assembly_name|
+          v = group_fields_args[assembly_name]
+          assembly = parent_flow.find_child(assembly_name)
+          raise "Could not find assembly '#{assembly_name}' in join" unless assembly
 
           pipes << assembly.tail_pipe
           incoming_scopes << @outgoing_scopes[assembly.name]
@@ -221,11 +226,11 @@ module Cascading
 
     # Unifies several pipes sharing the same field structure.
     # This actually creates a GroupBy pipe.
-    # It expects a list of assemblies as parameter.
+    # It expects a list of assembly names as parameter.
     def union_pipes(*args)
       pipes, incoming_scopes = [], []
-      args[0].each do |pipe|
-        assembly = Assembly.get(pipe)
+      args[0].each do |assembly_name|
+        assembly = parent_flow.find_child(assembly_name)
         pipes << assembly.tail_pipe
         incoming_scopes << @outgoing_scopes[assembly.name]
       end

@@ -155,7 +155,7 @@ def verify_assembly_output(assembly_name, params, &block)
   Cascade.new("foo") do
     flow("bar") do
       source assembly_name, tap(params[:source], params.slice(:scheme)) 
-      assembly(assembly_name)
+      assembly = assembly(assembly_name)
       sink assembly_name, tap("spec_output", :kind => :lfs, :sink_mode => :replace)
     end
   end.complete(@properties)
@@ -170,9 +170,9 @@ def verify_assembly_output(assembly_name, params, &block)
     output_data.size.should == params[:length]
   end
 
+  keys = assembly.scope.values_fields
   if block_given?
     output_data.each do |line| 
-      keys = Assembly.get(assembly_name).scope.values_fields
       values = line.chomp.split(/\t/) 
 
       yield(keys.zip(values).inject({}) do |map, kv|
