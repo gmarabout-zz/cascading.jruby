@@ -15,6 +15,6 @@ cascade 'scorenames' do
       project 'name', 'val3', 'id'
     end
 
-    sink 'input', tap('output/sorted', :sink_mode => :replace)
+    sink 'input', tap('output/scorenames', :sink_mode => :replace)
   end
 end.complete(sample_properties)

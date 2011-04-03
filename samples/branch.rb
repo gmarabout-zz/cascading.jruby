@@ -5,12 +5,9 @@ $: << File.join(File.dirname(__FILE__), '..', 'lib')
 require 'cascading'
 require 'samples/cascading'
 
-input = 'samples/data/data2.txt'
-output1, output2 = 'output/branch1', 'output/branch2'
-
 cascade 'branch' do
   flow 'branch' do
-    source 'input', tap(input)
+    source 'input', tap('samples/data/data2.txt')
 
     assembly 'input' do
       split 'line', ['name', 'score1', 'score2', 'id'], :pattern => /[.,]*\s+/
@@ -28,7 +25,7 @@ cascade 'branch' do
       end
     end
 
-    sink 'branch1', tap(output1, :sink_mode => :replace)
-    sink 'branch2', tap(output2, :sink_mode => :replace)
+    sink 'branch1', tap('output/branch1', :sink_mode => :replace)
+    sink 'branch2', tap('output/branch2', :sink_mode => :replace)
   end
 end.complete(sample_properties)

@@ -4,12 +4,9 @@ $: << File.join(File.dirname(__FILE__), '..', 'lib')
 require 'cascading'
 require 'samples/cascading'
 
-input = 'samples/data/data2.txt'
-output = 'output/rename'
-
 cascade 'rename' do
   flow 'rename' do
-    source 'input', tap(input)
+    source 'input', tap('samples/data/data2.txt')
 
     assembly 'input' do
       split 'line', ['name', 'score1', 'score2', 'id'], :output => ['name', 'score1', 'score2', 'id']
@@ -19,6 +16,6 @@ cascade 'rename' do
       puts "Final field names: #{scope.values_fields.to_a.inspect}"
     end
 
-    sink 'input', tap(output, :sink_mode => :replace)
+    sink 'input', tap('output/rename', :sink_mode => :replace)
   end
 end.complete(sample_properties)
