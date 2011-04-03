@@ -104,11 +104,10 @@ module Cascading
       options = args.extract_options!
 
       pipes, incoming_scopes = [], []
-      args.each do |assembly|
-        # a string instead of an Assembly variable could be used :-)
-        assembly_name = assembly
-        assembly = Assembly.get(assembly)
-        raise "Could not find assembly #{assembly_name}" unless assembly
+      args.each do |assembly_name|
+        assembly = Assembly.get(assembly_name)
+        raise "Could not find assembly '#{assembly_name}' in join" unless assembly
+
         pipes << assembly.tail_pipe
         incoming_scopes << @outgoing_scopes[assembly.name]
       end
@@ -129,6 +128,8 @@ module Cascading
         keys.each do |k|
           v = group_fields_args[k]
           assembly = Assembly.get(k)
+          raise "Could not find assembly '#{k}' in join" unless assembly
+
           pipes << assembly.tail_pipe
           incoming_scopes << @outgoing_scopes[assembly.name]
           group_fields << fields(v)
