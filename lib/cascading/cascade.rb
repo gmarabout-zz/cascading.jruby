@@ -43,9 +43,7 @@ module Cascading
 
     def complete(properties = nil)
       begin
-        parameters = make_flows(@children, properties)
-        cascade = Java::CascadingCascade::CascadeConnector.new.connect(parameters)
-        cascade.complete
+        Java::CascadingCascade::CascadeConnector.new.connect(name, make_flows(@children, properties)).complete
       rescue NativeException => e
         raise CascadingException.new(e, 'Error completing cascade')
       end

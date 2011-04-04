@@ -124,11 +124,13 @@ module Cascading
       end
     end
 
-
-    def connect(properties = nil)
-      properties ||= java.util.HashMap.new(@properties)
-      parameters = build_connect_parameter()
-      Java::CascadingFlow::FlowConnector.new(properties).connect(*parameters)
+    def connect(properties = java.util.HashMap.new(@properties))
+      Java::CascadingFlow::FlowConnector.new(properties).connect(
+        name,
+        make_tap_parameter(@sources),
+        make_tap_parameter(@sinks),
+        make_pipes
+      )
     end
 
     def complete(properties = nil)
@@ -142,13 +144,6 @@ module Cascading
     end
 
     private
-
-    def build_connect_parameter
-      sources = make_tap_parameter(@sources)
-      sinks = make_tap_parameter(@sinks)
-      pipes = make_pipes
-      [sources, sinks, pipes]
-    end
 
     def make_tap_parameter(taps)
       taps.inject({}) do |map, (name, tap)|
