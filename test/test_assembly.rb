@@ -19,10 +19,7 @@ class TC_Assembly < Test::Unit::TestCase
   def mock_assembly(&block)
     flow 'test' do
       source 'test', tap('test/data/data1.txt')
-
-      $assembly = assembly 'test' do
-        instance_eval(&block)
-      end
+      $assembly = assembly 'test', &block
     end
     $assembly
   end
