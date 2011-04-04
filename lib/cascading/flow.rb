@@ -124,7 +124,8 @@ module Cascading
       end
     end
 
-    def connect(properties = java.util.HashMap.new(@properties))
+    def connect(properties = nil)
+      properties = java.util.HashMap.new(properties || @properties)
       Java::CascadingFlow::FlowConnector.new(properties).connect(
         name,
         make_tap_parameter(@sources),
