@@ -30,7 +30,7 @@ module Cascading
     end
 
     def parent_flow
-      return parent if parent.is_a? Cascading::Flow
+      return parent if parent.kind_of?(Flow)
       parent.parent_flow
     end
 
@@ -115,16 +115,16 @@ module Cascading
       end
 
       group_fields_args = options.delete(:on)
-      if group_fields_args.is_a? ::String
+      if group_fields_args.kind_of?(String)
         group_fields_args = [group_fields_args]
       end
       group_fields_names = group_fields_args.to_a
       group_fields = []
-      if group_fields_args.is_a? ::Array
+      if group_fields_args.kind_of?(Array)
         pipes.size.times do
           group_fields << fields(group_fields_args)
         end
-      elsif group_fields_args.is_a? ::Hash
+      elsif group_fields_args.kind_of?(Hash)
         pipes, incoming_scopes = [], []
         keys = group_fields_args.keys.sort
         keys.each do |assembly_name|
