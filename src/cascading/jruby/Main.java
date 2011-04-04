@@ -4,34 +4,35 @@ import org.jruby.Ruby;
 import org.jruby.RubyInstanceConfig;
 
 public class Main {
-	private final static String JRUBY_HOME = "/opt/jruby";
+    private final static String JRUBY_HOME = "/opt/jruby";
 
-	/**
-	 * Starts an Hadoop job by reading the specified JRuby script. The syntax is
-	 * : <verbatim> hadoop jar myjob.jar cascading.jruby.JobRunner myjob.rb
-	 * <input> <output> </verbatim>
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		String name = args[0]; // the main script name.
-		if (!name.startsWith("/"))
-			name = "/" + name;
+    /**
+     * Starts a Hadoop job by reading the specified JRuby script.
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
+        String name = args[0]; // c.j script name
+        if (!name.startsWith("/"))
+            name = "/" + name;
 
-		// Ruby script arguments:
-		String[] newArgs = new String[args.length - 1];
-		System.arraycopy(args, 1, newArgs, 0, args.length - 1);
-		RubyInstanceConfig config = new RubyInstanceConfig();
-		config.setJRubyHome(JRUBY_HOME); // mwalker
-		config.processArguments(newArgs);
+        // c.j script args
+        String[] newArgs = new String[args.length - 1];
+        System.arraycopy(args, 1, newArgs, 0, args.length - 1);
+        RubyInstanceConfig config = new RubyInstanceConfig();
+        config.setJRubyHome(JRUBY_HOME); // mwalker
+        config.processArguments(newArgs);
 
-		System.out.println("Arguments: ");
-		for (String arg : config.getArgv())
-			System.out.println(arg);
+        System.out.println("Arguments: ");
+        for (String arg : config.getArgv())
+            System.out.println(arg);
 
-		Ruby runtime = Ruby.newInstance(config);
+        Ruby runtime = Ruby.newInstance(config);
 
-		runtime.executeScript("require '" + name + "'", name);
-		runtime.executeScript("require 'cascading/jruby/runner'", null); // gfodor
-	}
+        System.out.println("Requiring '" + name + "'");
+        runtime.executeScript("require '" + name + "'", name);
+
+        System.out.println("Requiring 'cascading/jruby/runner'");
+        runtime.executeScript("require 'cascading/jruby/runner'", "runner"); // gfodor
+    }
 }
