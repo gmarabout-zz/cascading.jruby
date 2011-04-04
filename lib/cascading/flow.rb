@@ -12,8 +12,8 @@ module Cascading
 
     def initialize(name, parent)
       @properties, @sources, @sinks, @outgoing_scopes, @listeners = {}, {}, {}, {}, []
-      self.class.add(name, self)
       super(name, parent)
+      self.class.add(name, self)
     end
 
     def assembly(name, &block)

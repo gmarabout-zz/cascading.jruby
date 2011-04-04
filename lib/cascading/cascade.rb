@@ -10,8 +10,8 @@ module Cascading
     extend Registerable
 
     def initialize(name)
-      self.class.add(name, self)
       super(name, nil) # A Cascade cannot have a parent
+      self.class.add(name, self)
     end
 
     def flow(name, &block)

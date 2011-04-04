@@ -10,23 +10,23 @@ module Cascading
   class Assembly < Cascading::Node
     include Operations
 
-    attr_accessor :tail_pipe, :head_pipe, :outgoing_scopes, :scope
+    attr_accessor :tail_pipe, :head_pipe, :outgoing_scopes
 
     def initialize(name, parent, outgoing_scopes = {})
+      super(name, parent)
+
       @every_applied = false
       @outgoing_scopes = outgoing_scopes
       if parent.kind_of?(Assembly)
         @head_pipe = Java::CascadingPipe::Pipe.new(name, parent.tail_pipe)
         # Copy to allow destructive update of name
-        update_scope(parent.scope.copy)
-        @scope.scope.name = name
+        @outgoing_scopes[name] = parent.scope.copy
+        scope.scope.name = name
       else # Parent is a Flow
         @head_pipe = Java::CascadingPipe::Pipe.new(name)
-        update_scope(@outgoing_scopes[name] || Scope.empty_scope(name))
+        @outgoing_scopes[name] ||= Scope.empty_scope(name)
       end
       @tail_pipe = @head_pipe
-
-      super(name, parent)
     end
 
     def parent_flow
@@ -34,18 +34,22 @@ module Cascading
       parent.parent_flow
     end
 
+    def scope
+      @outgoing_scopes[name]
+    end
+
     def debug_scope
-      puts "Current scope for '#{name}':\n  #{@scope}\n----------\n"
+      puts "Current scope for '#{name}':\n  #{scope}\n----------\n"
     end
 
     def primary(*args)
       options = args.extract_options!
       if args.size > 0 && args[0] != nil
-        @scope.primary_key_fields = fields(args)
+        scope.primary_key_fields = fields(args)
       else
-        @scope.primary_key_fields = nil
+        scope.primary_key_fields = nil
       end
-      @scope.grouping_primary_key_fields = @scope.primary_key_fields
+      scope.grouping_primary_key_fields = scope.primary_key_fields
     end
 
     def make_each(type, *parameters)
@@ -54,7 +58,7 @@ module Cascading
     end
 
     def make_every(type, *parameters)
-      make_pipe(type, parameters, @scope.grouping_key_fields)
+      make_pipe(type, parameters, scope.grouping_key_fields)
       @every_applied = true
     end
 
@@ -74,7 +78,7 @@ module Cascading
       first_fields = incoming_scopes.map do |scope|
         if scope.primary_key_fields
           primary_key = scope.primary_key_fields.to_a
-          grouping_primary_key = @scope.grouping_primary_key_fields.to_a
+          grouping_primary_key = scope.grouping_primary_key_fields.to_a
           if (primary_key & grouping_primary_key) == primary_key
             difference_fields(scope.values_fields, scope.primary_key_fields).to_a
           end
@@ -83,18 +87,18 @@ module Cascading
       # assert first_fields == first_fields.uniq
 
       # Do no first any fields explicitly aggregated over
-      first_fields = first_fields - @scope.grouping_fields.to_a
+      first_fields = first_fields - scope.grouping_fields.to_a
       if first_fields.size > 0
         first *first_fields
         puts "Firsting: #{first_fields.inspect} in assembly: #{@name}"
       end
 
-      bind_names @scope.grouping_fields.to_a if every_applied?
+      bind_names scope.grouping_fields.to_a if every_applied?
     end
 
-    def make_pipe(type, parameters, grouping_key_fields = [], incoming_scopes = [@scope])
+    def make_pipe(type, parameters, grouping_key_fields = [], incoming_scopes = [scope])
       @tail_pipe = type.new(*parameters)
-      update_scope(Scope.outgoing_scope(@tail_pipe, incoming_scopes, grouping_key_fields, every_applied?))
+      @outgoing_scopes[name] = Scope.outgoing_scope(@tail_pipe, incoming_scopes, grouping_key_fields, every_applied?)
     end
 
     def to_s
@@ -201,7 +205,7 @@ module Cascading
       join(*args, &block)
     end
 
-    # Builds a new branch. The name of the branch is specified as first item in args array.
+    # Builds a new branch.
     def branch(name, &block)
       raise "Could not build branch '#{name}'; block required" unless block_given?
       assembly = Assembly.new(name, self, @outgoing_scopes)
@@ -222,7 +226,7 @@ module Cascading
 
       parameters = [@tail_pipe, group_fields, sort_fields, reverse].compact
       make_pipe(Java::CascadingPipe::GroupBy, parameters, group_fields)
-      do_every_block_and_rename_fields(args, [@scope], &block)
+      do_every_block_and_rename_fields(args, [scope], &block)
     end
 
     # Unifies several pipes sharing the same field structure.
@@ -288,7 +292,7 @@ module Cascading
     #     discard "field1", "field2"
     def discard(*args)
       discard_fields = fields(args)
-      keep_fields = difference_fields(@scope.values_fields, discard_fields)
+      keep_fields = difference_fields(scope.values_fields, discard_fields)
       project(*keep_fields.to_a)
     end
 
@@ -307,12 +311,12 @@ module Cascading
     # Example:
     #     rename "old_name" => "new_name"
     def rename(name_map)
-      old_names = @scope.values_fields.to_a
+      old_names = scope.values_fields.to_a
       new_names = old_names.map{ |name| name_map[name] || name }
       invalid = name_map.keys.sort - old_names
       raise "invalid names: #{invalid.inspect}" unless invalid.empty?
 
-      old_key = @scope.primary_key_fields.to_a
+      old_key = scope.primary_key_fields.to_a
       new_key = old_key.map{ |name| name_map[name] || name }
 
       new_fields = fields(new_names)
@@ -717,13 +721,6 @@ module Cascading
       output = options[:output] || all_fields
 
       each args, :function => field_joiner(options), :output => output
-    end
-
-    private
-
-    def update_scope(scope)
-      @scope = scope
-      @outgoing_scopes[name] = @scope
     end
   end
 end
