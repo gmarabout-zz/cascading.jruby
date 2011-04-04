@@ -9,7 +9,7 @@ namespace :spec do
     # Allow user to specify specs to run at command line
     _, spec_files = ARGV
     spec_files ||= PROJ.spec.files
-    puts "Running specs: #{spec_files}"
+    t.verbose = true
 
     t.ruby_opts = PROJ.ruby_opts
     t.spec_opts = PROJ.spec.opts
