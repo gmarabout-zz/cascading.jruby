@@ -33,11 +33,12 @@ task :clean => ['ant:clean', 'gem:clean'] do
 end
 
 PROJ.name = 'cascading.jruby'
-PROJ.authors = 'Grégoire Marabout'
-PROJ.email = 'gmarabout@gmail.com'
-PROJ.url = 'http://github.com/gmarabout/cascading.jruby'
+PROJ.authors = ['Matt Walker', 'Grégoire Marabout']
+PROJ.email = 'mwalker@etsy.com'
+PROJ.url = 'http://github.com/etsy/cascading.jruby'
 PROJ.version = Cascading::VERSION
 PROJ.summary = 'A JRuby DSL for Cascading'
+PROJ.description = 'cascading.jruby is a small DSL above Cascading, written in JRuby'
 PROJ.rubyforge.name = 'cascading.jruby'
 PROJ.spec.opts << '--color'
 
